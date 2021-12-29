@@ -9,10 +9,17 @@
     selectRaffle.add(option);
   } */
   // As with JSON, use the Fetch API & ES6
-  fetch("txId.txt")
+  fetch("gameIdList.txt")
     .then((response) => response.text())
     .then((data) => {
       // Do something with your data
-      console.log(data);
+      let raffleList = data.split("/\n/")
+      console.log(raffleList)
+      for (const raffle of raffleList) {
+        var option = document.createElement("option");
+        option.value = raffle;
+        option.text = raffle;
+        selectRaffle.appendChild(option);
+      }
     });
 })();
