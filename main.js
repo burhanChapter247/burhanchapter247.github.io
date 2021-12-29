@@ -13,7 +13,7 @@
     .then((response) => response.text())
     .then((data) => {
       // Do something with your data
-      let raffleList = data.split("/\n/")
+      let raffleList = data.split(/\n/)
       console.log(raffleList)
       for (const raffle of raffleList) {
         var option = document.createElement("option");
