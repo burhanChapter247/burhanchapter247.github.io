@@ -1,5 +1,4 @@
 (function () {
-  const bsv = window.bsvjs
   const selectRaffle = document.getElementById("selectRaffle");
   // As with JSON, use the Fetch API & ES6
   fetch("./static/gameIdList.txt")
@@ -22,6 +21,7 @@ function handleValidate() {
   const e = document.getElementById("selectRaffle");
   const raffleId = e.options[e.selectedIndex].value;
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
+  const bsv = window.bsvjs
 
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
