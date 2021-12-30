@@ -28,10 +28,13 @@ myHeaders.append('Content-Type','text/plain; charset=UTF-8');
     .then((response) => response.text())
     .then((data) => {
       console.log(data,'initTransactionData')
-      fetch(`${S3BucketBaseUrl}/ba1ae83da82f3866bec05ac5b24a06a478785e054996ac899a25f31784627fc2.btx`,myHeaders)
+      fetch(`${S3BucketBaseUrl}/ba1ae83da82f3866bec05ac5b24a06a478785e054996ac899a25f31784627fc2.txt`,myHeaders)
         .then((response) => response.arrayBuffer())
         .then((transactionData) => {
           console.log(transactionData,'transactionData+++++++++')
+          const decoder = new TextDecoder('iso-8859-1');
+            const text = decoder.decode(transactionData);
+            console.log(text,'text+++++++++++++++++');
           const data = bsv.Tx.fromBuffer((transactionData))
           console.log(data,'parsedData')
           const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
