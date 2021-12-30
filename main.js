@@ -29,10 +29,8 @@ function handleValidate() {
       fetch(`${S3BucketBaseUrl}/ba1ae83da82f3866bec05ac5b24a06a478785e054996ac899a25f31784627fc2.btx`)
         .then((response) => response.text())
         .then((transactionData) => {
-
-          console.log(transactionData,'transactionData+++++++++')
-          console.log(new Buffer(transactionData),'buffer++++')
-          const data = bsv.Tx.fromBuffer(new Buffer(transactionData))
+          console.log((transactionData).split(/\n/)[0],'transactionData+++++++++')
+          const data = bsv.Tx.fromBuffer((transactionData).split(/\n/)[0])
           console.log(data,'parsedData')
           const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
           console.log(bufferValues,'bufferValues+++++++')
