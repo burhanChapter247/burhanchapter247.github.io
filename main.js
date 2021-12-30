@@ -27,7 +27,7 @@ function handleValidate() {
     .then((response) => response.text())
     .then((data) => {
       console.log(data, 'initTransactionData')
-      fetch(`${S3BucketBaseUrl}/ba1ae83da82f3866bec05ac5b24a06a478785e054996ac899a25f31784627fc2.txt`)
+      fetch(`${S3BucketBaseUrl}/32f8be27e43a0234bafe21ccb354b1f963ee5236bba866d10c9eb0ef2a7842cb.txt`)
         .then((response) => response.arrayBuffer())
         .then((transactionData) => {
           console.log(transactionData, 'transactionData+++++++++')
