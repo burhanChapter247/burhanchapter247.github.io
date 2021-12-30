@@ -32,7 +32,7 @@ function handleValidate() {
         .then((transactionData) => {
           console.log(transactionData, 'transactionData+++++++++')
           const buf = Buffer.alloc(transactionData.byteLength);
-          const view = new Uint8Array(transactionData.buffer);
+          const view = new Uint8Array(transactionData);
           console.log(view, 'view+++++++')
           for (let i = 0; i < buf.length; ++i) {
             buf[i] = view[i];
