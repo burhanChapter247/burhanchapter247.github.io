@@ -18,32 +18,35 @@
 })();
 
 function handleValidate() {
+  const bsv = window.bsvjs
   const e = document.getElementById("selectRaffle");
   const raffleId = e.options[e.selectedIndex].value;
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
-  const bsv = window.bsvjs
-  var myHeaders = new Headers();
-myHeaders.append('Content-Type','text/plain; charset=UTF-8');
+
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
-      console.log(data,'initTransactionData')
-      fetch(`${S3BucketBaseUrl}/ba1ae83da82f3866bec05ac5b24a06a478785e054996ac899a25f31784627fc2.txt`,myHeaders)
+      console.log(data, 'initTransactionData')
+      fetch(`${S3BucketBaseUrl}/ba1ae83da82f3866bec05ac5b24a06a478785e054996ac899a25f31784627fc2.txt`, myHeaders)
         .then((response) => response.arrayBuffer())
         .then((transactionData) => {
-          console.log(transactionData,'transactionData+++++++++')
-          const decoder = new TextDecoder('iso-8859-1');
-            const text = decoder.decode(transactionData);
-            console.log(text,'text+++++++++++++++++');
-          const data = bsv.Tx.fromBuffer((text))
-          console.log(data,'parsedData')
+          console.log(transactionData, 'transactionData+++++++++')
+          const buf = Buffer.alloc(transactionData.byteLength);
+          const view = new Uint8Array(transactionData.buffer);
+          console.log(view, 'view+++++++')
+          for (let i = 0; i < buf.length; ++i) {
+            buf[i] = view[i];
+          }
+          console.log(buf, 'buf++++++++++')
+          const data = bsv.Tx.fromBuffer((buf))
+          console.log(data, 'parsedData')
           const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
-          console.log(bufferValues,'bufferValues+++++++')
+          console.log(bufferValues, 'bufferValues+++++++')
           const messageType = bufferValues[2];
           const signature = bufferValues[3];
           const restOfChunks = bufferValues.slice(4);
           const messageParts = restOfChunks.filter((i) => i).map((i) => i);
-           console.log(messageType,'messageType++++',messageParts)
+          console.log(messageType, 'messageType++++', messageParts)
           if (restOfChunks.length > messageParts.length)
             throw new Error(
               "Transaction was expected to end with Message Part variables and nothing else"
