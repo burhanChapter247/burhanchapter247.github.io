@@ -35,7 +35,7 @@ myHeaders.append('Content-Type','text/plain; charset=UTF-8');
           const decoder = new TextDecoder('iso-8859-1');
             const text = decoder.decode(transactionData);
             console.log(text,'text+++++++++++++++++');
-          const data = bsv.Tx.fromBuffer((transactionData))
+          const data = bsv.Tx.fromBuffer((text))
           console.log(data,'parsedData')
           const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
           console.log(bufferValues,'bufferValues+++++++')
