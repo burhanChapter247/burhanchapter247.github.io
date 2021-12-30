@@ -22,13 +22,13 @@ function handleValidate() {
   const raffleId = e.options[e.selectedIndex].value;
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
   const bsv = window.bsvjs
-
+  console.log(bsv.Tx.fromBuffer())
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
       console.log(data,'initTransactionData')
       fetch(`${S3BucketBaseUrl}/ba1ae83da82f3866bec05ac5b24a06a478785e054996ac899a25f31784627fc2.btx`)
-        .then((response) => response.text())
+        .then((response) => response.buffer())
         .then((transactionData) => {
           console.log(transactionData,'transactionData+++++++++')
           const data = bsv.Tx.fromBuffer(transactionData)
