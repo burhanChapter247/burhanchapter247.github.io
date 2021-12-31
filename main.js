@@ -1,6 +1,6 @@
 (function () {
 
-  const selectRaffle = document.getElementById("selectRaffle");
+  const selectRaffle = document.getElementById("selectGame");
   // As with JSON, use the Fetch API & ES6
   fetch("./static/gameIdList.txt")
     .then((response) => response.text())
@@ -20,19 +20,18 @@
 
 function handleValidate() {
   const bsv = window.bsvjs
-
+  const e = document.getElementById("selectGame");
+  const raffleId = e.options[e.selectedIndex].value;
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
   const pubKey = bsv.PubKey.fromPrivKey(
     bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   );
 
-
-  const e = document.getElementById("selectRaffle");
-  const raffleId = e.options[e.selectedIndex].value;
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
       let transactionId = data.split(/\n/).filter(Boolean)
+
       fetch(`${S3BucketBaseUrl}/${transactionId[0]}.btx`)
         .then((response) => response.arrayBuffer())
         .then((transactionData) => {
@@ -48,81 +47,44 @@ function handleValidate() {
             buf[i] = view[i];
           }
           const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-          console.log(realInitTxid,"+++++++++++++++++++++++++")
           if (messageType !== 0)
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
           if (!validateSignature(pubKey, signature, [messageBuf]))
             throw Error("Initialization TX Signature validation failed");
 
           const initObject = JSON.parse(messageBuf.toString());
-          console.log(initObject,'initObject+++++++++++')
+          console.log(initObject, 'initObject+++++++++++')
           if (initObject.noOfTickets < 2) {
-            throw new Error("Raffle must have atleast more than 2 tickets");
+            throw new Error("Game must have atleast more than 2 tickets");
           }
           if (!initObject.rewards.length) {
-            throw new Error("Raffle must have atleast 1 reward");
+            throw new Error("Game must have atleast 1 reward");
           }
 
           if (initObject.rewards.every((item) => item.rewardCount > 1 && item.rewardPrice && item.rewardTitle && item.description && item.rank > 0)) {
-            throw new Error("Raffle rewards not have valid data");
+            throw new Error("Game rewards not have valid data");
           }
 
           if (!initObject.initialSeed) {
-            throw new Error("Raffle must contain the initial seeds")
+            throw new Error("Game must contain the initial seeds")
           }
           const regexExp = /^[a-f0-9]{64}$/gi;
           if (!regexExp.test(initObject.initialSeed)) {
             throw new Error("Invalid initial seed")
           }
 
-          // if (!initObject.additionalSeeds?.length) {
-          //   throw new Error("Raffle must contain atleast one additional seed");
-          // }
+          if (!initObject.additionalSeeds?.length) {
+            throw new Error("Game must contain at least one additional seed");
+          }
 
-          // if (!initObject.additionalSeeds.every(additionalSeed => additionalSeed.description && additionalSeed.regexPattern)) {
-          //   throw new Error("Raffle must contain valid additional seeds")
-          // }
-
-          fetch(`./static/txs/${raffleId}/ticketIds.txt`)
-            .then((response) => response.text())
-            .then((data) => {
-              const ticketIds = data.split(/\n/).filter(Boolean)
-              console.log(ticketIds.length,'ticketIds.length',initObject.noOfTickets)
-              // if (ticketIds.length !== initObject.noOfTickets) {
-              //   throw new Error("Ticket count does not match")
-              // }
-              for (ticketId of ticketIds) {
-                fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
-                  .then((response) => response.arrayBuffer())
-                  .then((transactionData) => {
-                    console.log(transactionData, 'transactionData++++++++++')
-                    const {
-                      messageType,
-                      signature,
-                      messageParts: [initTxidBuf, ticketIdBuf],
-                    } = parseTransaction(transactionData, 2)
-                    console.log(messageType, 'messageType++++++++', signature)
-                    console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
-                    if (messageType !== 1)
-                      throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
-
-                    if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf]))
-                      throw Error("Finalization TX Signature validation failed");
-
-                    const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                    console.log(ticketId, 'ticketId', initTxidBuf)
-                    if (!initTxidBuf.equals(realInitTxid)) {
-                      throw new Error(
-                        `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
-                      );
-                    }
-                  })
-              }
-            })
+          if (!initObject.additionalSeeds.every(additionalSeed => additionalSeed.description && additionalSeed.regexPattern)) {
+            throw new Error("Game must contain valid additional seeds")
+          }
+          alert("Initialization transaction has been valid")
           fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
             .then((response) => response.text())
             .then((data) => {
-              let finalizeTxId=data.split(/\n/).filter(Boolean)
+              let finalizeTxId = data.split(/\n/).filter(Boolean)
               fetch(`${S3BucketBaseUrl}/${finalizeTxId[0]}.btx`)
                 .then((response) => response.arrayBuffer())
                 .then((transactionData) => {
@@ -141,11 +103,10 @@ function handleValidate() {
                   const initTxid = Buffer.from(endObject.initializationTxid, "hex");
                   console.log(realInitTxid, 'realInitTxid', initTxid)
                   console.log(endObject, 'endObject++++++++++@@@@@@@@@')
-
-                  // if (!initTxid.equals(realInitTxid))
-                  //   throw new Error(
-                  //     "The Finalization transaction specifies the wrong initialization TXID"
-                  //   );
+                  if (!initTxid.equals(realInitTxid))
+                    throw new Error(
+                      "The Finalization transaction specifies the wrong initialization TXID"
+                    );
                   if (!endObject.lastTicketSoldTimestamp) {
                     throw new Error("Raffle doesn't have last ticket timestamp")
                   }
@@ -166,6 +127,41 @@ function handleValidate() {
 
                 })
             })
+          alert("Finalization transaction has been valid")
+          fetch(`./static/txs/${raffleId}/ticketIds.txt`)
+            .then((response) => response.text())
+            .then((data) => {
+              const ticketIds = data.split(/\n/).filter(Boolean)
+              if (ticketIds.length !== initObject.noOfTickets) {
+                throw new Error("Ticket count does not match")
+              }
+              for (ticketId of ticketIds) {
+                fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
+                  .then((response) => response.arrayBuffer())
+                  .then((transactionData) => {
+                    const {
+                      messageType,
+                      signature,
+                      messageParts: [initTxidBuf, ticketIdBuf],
+                    } = parseTransaction(transactionData, 2)
+                    console.log(messageType, 'messageType++++++++', signature)
+                    console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
+                    if (messageType !== 1)
+                      throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
+
+                    if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf]))
+                      throw Error("Finalization TX Signature validation failed");
+
+                    const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
+                    if (!initTxidBuf.equals(realInitTxid)) {
+                      throw new Error(
+                        `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
+                      );
+                    }
+                  })
+              }
+            })
+            getWinnerInfo(raffleId)
         })
 
 
@@ -223,13 +219,37 @@ function validateSignature(
   return bsv.Ecdsa.verify(hash, signature, pubKey);
 }
 
-function stringToRegex (str){
+function stringToRegex(str) {
   // Main regex
   const main = str.match(/\/(.+)\/.*/)[1]
-  
+
   // Regex options
   const options = str.match(/\/.+\/(.*)/)[1]
-  
+
   // Compiled regex
   return new RegExp(main, options)
 }
+
+function getWinnerInfo  (gameId)  {
+  const winnerInfoElement = document.getElementById("winnerInfo");
+  winnerInfoElement.innerHTML = "<p>Loading........</p>";
+  fetch(`https://ugoflip.herokuapp.com/v1/raffle/${gameId}/reward-info`)
+    .then((response) => response.json())
+    .then((responseData) => {
+      if (responseData.data) {
+        let innerElement = "<ul>";
+        for (const reward of responseData.data) {
+          if (reward.winningTicketIds.length) {
+            innerElement += `<li>Reward: ${reward.rewardTitle}, Price: ${
+              reward.rewardPrice
+            }, Winning Ticket Ids: ${reward.winningTicketIds.join(",")}</li>`;
+          }
+        }
+
+        innerElement += "</ul>";
+        winnerInfoElement.innerHTML = innerElement;
+      } else {
+        winnerInfoElement.innerHTML = "<p>No Data Found</p>";
+      }
+    });
+};
