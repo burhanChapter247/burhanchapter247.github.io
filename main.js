@@ -28,11 +28,17 @@ function handleValidate() {
     bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   );
   fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
-    .then((response) => response.text())
+    .then((response) => {
+      console.log(response, 'response', response.ok)
+      if (!response.ok) {
+        alert("Game result have not been announced yet")
 
+      }
+      return response.text()
+    })
     .catch(error => {
       console.log(error, 'error+++++++')
-      alert("Game result hav not been announced yet")
+      alert("Game result have not been announced yet")
     })
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
@@ -56,6 +62,7 @@ function handleValidate() {
           const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
           if (messageType !== 0) {
             alert("Data are corrupted")
+            return
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
 
           }
@@ -183,8 +190,8 @@ function handleValidate() {
                       throw Error("Finalization TX Signature validation failed");
                     }
                     const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                    //Todo (Note)  need to remove raffle id check once resolve seed update issue
-                    if (!initTxidBuf.equals(realInitTxid) && raffleId !=="61ce92d971d71f359ba8781f") {
+                    //TODO: need to remove raffle id check once seed update issue will resolve
+                    if (!initTxidBuf.equals(realInitTxid) && raffleId !== "61ce92d971d71f359ba8781f") {
                       alert("Data are corrupted")
                       throw new Error(
                         `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
@@ -270,7 +277,7 @@ function getWinnerInfo(gameId) {
     .then((response) => response.json())
     .then((responseData) => {
       if (responseData.data) {
-        let innerElement ="<div >"
+        let innerElement = "<div >"
         for (const reward of responseData.data) {
           if (reward.winningTicketIds.length) {
             innerElement += `<div style="text-align:center;"><span ><b> ${reward.rewardTitle}</b></span> <br />${reward.rewardPrice
