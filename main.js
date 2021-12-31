@@ -41,9 +41,10 @@ function handleValidate() {
           console.log(messageBuf,messageBuf,'initialze transaction')
           if (messageType !== 0)
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
-
-          if (!validateSignature(pubKey, signature, [messageBuf]))
-            throw Error("Initialization TX Signature validation failed");
+            const data =validateSignature(pubKey, signature, [messageBuf])
+            console.log(data,'data++++++++++++')
+          // if (!validateSignature(pubKey, signature, [messageBuf]))
+          //   throw Error("Initialization TX Signature validation failed");
 
           const initObject = JSON.parse(messageBuf.toString());
           console.log(initObject,'initObject+++++')
