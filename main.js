@@ -22,8 +22,8 @@ function handleValidate() {
   const e = document.getElementById("selectRaffle");
   const raffleId = e.options[e.selectedIndex].value;
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
-  const pubKey = PubKey.fromPrivKey(
-    PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
+  const pubKey = bsv.PubKey.fromPrivKey(
+    bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   ).toString();
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
