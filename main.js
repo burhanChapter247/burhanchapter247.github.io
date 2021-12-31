@@ -41,11 +41,17 @@ function handleValidate() {
             signature,
             messageParts: [messageBuf],
           } = parseTransaction(transactionData, 1)
+          const buf = Buffer.alloc(transactionData.byteLength);
+          const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
+
+          const view = new Uint8Array(transactionData);
+          for (let i = 0; i < buf.length; ++i) {
+            buf[i] = view[i];
+          }
           if (messageType !== 0)
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
-          const data = validateSignature(pubKey, signature, [messageBuf])
-          // if (!validateSignature(pubKey, signature, [messageBuf]))
-          //   throw Error("Initialization TX Signature validation failed");
+          if (!validateSignature(pubKey, signature, [messageBuf]))
+            throw Error("Initialization TX Signature validation failed");
 
           const initObject = JSON.parse(messageBuf.toString());
           if (initObject.noOfTickets < 2) {
@@ -82,20 +88,19 @@ function handleValidate() {
               // if (ticketIds.length !== initObject.noOfTickets) {
               //   throw new Error("Ticket count does not match")
               // }
-              console.log(ticketIds, 'ticketIdsticketIds',initObject.noOfTickets)
+              console.log(ticketIds, 'ticketIdsticketIds', initObject.noOfTickets)
               for (ticketId of ticketIds) {
                 fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
                   .then((response) => response.arrayBuffer())
                   .then((transactionData) => {
-                    console.log(transactionData,'transactionData++++++++++')
+                    console.log(transactionData, 'transactionData++++++++++')
                     const {
                       messageType,
                       signature,
                       messageParts: [initTxidBuf, ticketIdBuf],
-                      realInitTxid
                     } = parseTransaction(transactionData, 2)
-                    console.log(messageType,'messageType++++++++',signature)
-                    console.log(realInitTxid, 'initTxid+++++++',initTxidBuf)
+                    console.log(messageType, 'messageType++++++++', signature)
+                    console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
                     if (messageType !== 1)
                       throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
 
@@ -103,7 +108,7 @@ function handleValidate() {
                       throw Error("Finalization TX Signature validation failed");
 
                     const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                    console.log(ticketId, 'ticketId',initTxidBuf)
+                    console.log(ticketId, 'ticketId', initTxidBuf)
                     if (!initTxidBuf.equals(realInitTxid)) {
                       throw new Error(
                         `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
@@ -122,7 +127,6 @@ function handleValidate() {
                     messageType,
                     signature,
                     messageParts: [messageBuf],
-                    realInitTxid
                   } = parseTransaction(transactionData, 1)
                   if (messageType !== 2)
                     throw Error("Finalization TX message type must be RAFFLE_FINALIZING");
@@ -132,8 +136,8 @@ function handleValidate() {
 
                   const endObject = JSON.parse(messageBuf.toString());
                   const initTxid = Buffer.from(endObject.initializationTxid, "hex");
-                  console.log(realInitTxid,'realInitTxid',initTxid)
-                  console.log(endObject,'endObject++++++++++@@@@@@@@@')
+                  console.log(realInitTxid, 'realInitTxid', initTxid)
+                  console.log(endObject, 'endObject++++++++++@@@@@@@@@')
 
                   if (!initTxid.equals(realInitTxid))
                     throw new Error(
@@ -182,7 +186,6 @@ function parseTransaction(transactionData, expectedMessageParts) {
   const signature = bufferValues[3];
   const restOfChunks = bufferValues.slice(4);
   const messageParts = restOfChunks.filter((i) => i).map((i) => i);
-  const initTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
 
   if (restOfChunks.length > messageParts.length)
     throw new Error(
@@ -200,12 +203,10 @@ function parseTransaction(transactionData, expectedMessageParts) {
     throw new Error(
       `Transaction was expected to have exactly ${expectedMessageParts} Message Variables, but was ${messageParts.length}`
     );
-  console.log(initTxid, 'messageType?.readInt8()')
   return {
     messageType: messageType?.readInt8(),
     signature: bsv.Sig.fromBuffer(signature),
     messageParts,
-    realInitTxid:initTxid
   };
 }
 
