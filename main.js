@@ -205,7 +205,7 @@ function parseTransaction(transactionData, expectedMessageParts) {
     messageType: messageType?.readInt8(),
     signature: bsv.Sig.fromBuffer(signature),
     messageParts,
-    initTxid
+    realInitTxid:initTxid
   };
 }
 
