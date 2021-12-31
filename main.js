@@ -99,8 +99,8 @@ function handleValidate() {
                     for (let i = 0; i < buf.length; ++i) {
                       buf[i] = view[i];
                     }
-                    const initTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-                    console.log(initTxid, 'initTxid+++++++')
+                    const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
+                    console.log(realInitTxid, 'initTxid+++++++')
                     if (messageType !== 1)
                       throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
 
@@ -108,7 +108,7 @@ function handleValidate() {
                       throw Error("Finalization TX Signature validation failed");
 
                     const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                    console.log(ticketId, 'ticketId')
+                    console.log(ticketId, 'ticketId',initTxidBuf)
                     if (!initTxidBuf.equals(realInitTxid)) {
                       throw new Error(
                         `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
@@ -161,7 +161,6 @@ function handleValidate() {
                   for (let i = 0; i < endObject.additionalSeeds.length; i++) {
                     const seed = endObject.additionalSeeds[i];
                     const regex = initObject.additionalSeeds[i].regexPattern;
-                    // TODO: validate that the seed matches the the regex
                     if (!stringToRegex(regex).test(seed)) {
                       throw new Error("Invalid seeds");
                     }
