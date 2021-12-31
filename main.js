@@ -39,8 +39,8 @@ function handleValidate() {
             messageParts: [messageBuf],
           } = parseTransaction(transactionData,1)
           console.log(messageBuf,messageBuf,'initialze transaction')
-          // if (messageType !== "RAFFLE_INITIALIZATION")
-          //   throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
+          if (messageType !== 0)
+            throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
 
           if (!validateSignature(pubKey, signature, [messageBuf]))
             throw Error("Initialization TX Signature validation failed");
@@ -170,5 +170,6 @@ function validateSignature(
   const bsv = window.bsvjs
 
   const hash = bsv.Hash.sha256(Buffer.concat(messageParts));
+  console.log(hash,'hash',signature,'signature',pubKey)
   return bsv.Ecdsa.verify(hash, signature, pubKey);
 }
