@@ -82,11 +82,12 @@ function handleValidate() {
               // if (ticketIds.length !== initObject.noOfTickets) {
               //   throw new Error("Ticket count does not match")
               // }
-              console.log(ticketIds, 'ticketIdsticketIds')
+              console.log(ticketIds, 'ticketIdsticketIds',initObject.noOfTickets)
               for (ticketId of ticketIds) {
                 fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
                   .then((response) => response.arrayBuffer())
                   .then((transactionData) => {
+                    console.log(transactionData,'transactionData++++++++++')
                     const {
                       messageType,
                       signature,
