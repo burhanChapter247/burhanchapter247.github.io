@@ -26,6 +26,7 @@ function handleValidate() {
     bsv.PrivKey.Testnet.fromString("cRi7Ldcg7uioavPRz3jNTQ7YPPZpKjgRtiwhcE5B4YZyyL1PHmxS")
   );
 
+  
   const e = document.getElementById("selectRaffle");
   const raffleId = e.options[e.selectedIndex].value;
   fetch(`./static/txs/${raffleId}/initTx.txt`)
@@ -43,7 +44,7 @@ function handleValidate() {
           console.log(messageBuf,messageBuf,'initialze transaction')
           if (messageType !== 0)
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
-            const data =validateSignature(bsv.PubKey.fromString(pubKey), signature, [messageBuf])
+            const data =validateSignature(pubKey, signature, [messageBuf])
             console.log(data,'data++++++++++++')
           // if (!validateSignature(pubKey, signature, [messageBuf]))
           //   throw Error("Initialization TX Signature validation failed");
