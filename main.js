@@ -19,12 +19,13 @@
 
 function handleValidate() {
   const bsv = window.bsvjs
-  const e = document.getElementById("selectRaffle");
-  const raffleId = e.options[e.selectedIndex].value;
+  
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
   const pubKey = bsv.PubKey.fromPrivKey(
     bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   ).toString();
+  const e = document.getElementById("selectRaffle");
+  const raffleId = e.options[e.selectedIndex].value;
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
@@ -37,9 +38,9 @@ function handleValidate() {
             signature,
             messageParts: [messageBuf],
           } = parseTransaction(transactionData,1)
-          console.log(messageBuf,messageParts,'initialze transaction')
-          if (messageType !== "RAFFLE_INITIALIZATION")
-            throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
+          console.log(messageBuf,messageBuf,'initialze transaction')
+          // if (messageType !== "RAFFLE_INITIALIZATION")
+          //   throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
 
           if (!validateSignature(pubKey, signature, [messageBuf]))
             throw Error("Initialization TX Signature validation failed");
@@ -153,7 +154,7 @@ function parseTransaction(transactionData,expectedMessageParts) {
     throw new Error(
       `Transaction was expected to have exactly ${expectedMessageParts} Message Variables, but was ${messageParts.length}`
     );
-
+   console.log(messageType?.readInt8(),'messageType?.readInt8()')
   return {
     messageType: messageType?.readInt8(),
     signature: bsv.Sig.fromBuffer(signature),
@@ -166,6 +167,8 @@ function validateSignature(
   signature,
   messageParts
 ) {
+  const bsv = window.bsvjs
+
   const hash = bsv.Hash.sha256(Buffer.concat(messageParts));
   return bsv.Ecdsa.verify(hash, signature, pubKey);
 }
