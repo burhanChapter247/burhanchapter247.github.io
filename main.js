@@ -82,7 +82,7 @@ function handleValidate() {
             .then((response) => response.text())
             .then((data) => {
               const ticketIds = data.split(/\n/)
-              if (ticketId.length !== initObject.noOfTickets) {
+              if (ticketIds.length !== initObject.noOfTickets) {
                 throw new Error("Ticket count does not match")
               }
               for (ticketId of ticketIds) {
