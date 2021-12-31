@@ -7,7 +7,7 @@
     .then((data) => {
 
       // Do something with your data
-      let raffleList = data.split(/\n/)
+      let raffleList = data.split(/\n/).filter(Boolean)
       for (const raffle of raffleList) {
         var option = document.createElement("option");
         option.value = raffle.split("-")[0];
@@ -32,7 +32,7 @@ function handleValidate() {
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
-      let transactionId = data.split(/\n/)
+      let transactionId = data.split(/\n/).filter(Boolean)
       fetch(`${S3BucketBaseUrl}/${transactionId[0]}.btx`)
         .then((response) => response.arrayBuffer())
         .then((transactionData) => {
@@ -48,7 +48,7 @@ function handleValidate() {
             buf[i] = view[i];
           }
           const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-
+          console.log(realInitTxid,"+++++++++++++++++++++++++")
           if (messageType !== 0)
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
           if (!validateSignature(pubKey, signature, [messageBuf]))
@@ -86,7 +86,7 @@ function handleValidate() {
           fetch(`./static/txs/${raffleId}/ticketIds.txt`)
             .then((response) => response.text())
             .then((data) => {
-              const ticketIds = data.split(/\n/)
+              const ticketIds = data.split(/\n/).filter(Boolean)
               console.log(ticketIds.length,'ticketIds.length',initObject.noOfTickets)
               // if (ticketIds.length !== initObject.noOfTickets) {
               //   throw new Error("Ticket count does not match")
@@ -122,7 +122,7 @@ function handleValidate() {
           fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
             .then((response) => response.text())
             .then((data) => {
-              let finalizeTxId=data.split(/\n/)
+              let finalizeTxId=data.split(/\n/).filter(Boolean)
               fetch(`${S3BucketBaseUrl}/${finalizeTxId[0]}.btx`)
                 .then((response) => response.arrayBuffer())
                 .then((transactionData) => {
@@ -221,4 +221,15 @@ function validateSignature(
   const hash = bsv.Hash.sha256(Buffer.concat(messageParts));
   console.log(hash, 'hash', signature, 'signature', pubKey)
   return bsv.Ecdsa.verify(hash, signature, pubKey);
+}
+
+function stringToRegex (str){
+  // Main regex
+  const main = str.match(/\/(.+)\/.*/)[1]
+  
+  // Regex options
+  const options = str.match(/\/.+\/(.*)/)[1]
+  
+  // Compiled regex
+  return new RegExp(main, options)
 }
