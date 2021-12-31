@@ -115,6 +115,8 @@ function handleValidate() {
 }
 
 function parseTransaction(transactionData,expectedMessageParts) {
+  const bsv = window.bsvjs
+
   const buf = Buffer.alloc(transactionData.byteLength);
   const view = new Uint8Array(transactionData);
   console.log(view, 'view+++++++')
