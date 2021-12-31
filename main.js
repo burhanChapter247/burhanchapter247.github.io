@@ -27,7 +27,9 @@ function handleValidate() {
     bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   );
   fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
-    .then((response) => response.text())
+    .then((response) => {
+      console.log(response)
+      return response.text()})
     .then((data) => {
       let finalizeTxId = data.split(/\n/).filter(Boolean)
       if(!(finalizeTxId && finalizeTxId.length)){
@@ -247,8 +249,8 @@ function getWinnerInfo(gameId) {
         let innerElement = "<ul>";
         for (const reward of responseData.data) {
           if (reward.winningTicketIds.length) {
-            innerElement += `<li>Reward: ${reward.rewardTitle}, Price: ${reward.rewardPrice
-              }, Winning Ticket Ids: ${reward.winningTicketIds.join(",")}</li>`;
+            innerElement += `<li><b>Reward</b>: ${reward.rewardTitle}</li>, <li><b>Price</b>: ${reward.rewardPrice
+              }</li>, <li><b>Winning Ticket Ids</b>: ${reward.winningTicketIds.join(",")}</li>`;
           }
         }
 
