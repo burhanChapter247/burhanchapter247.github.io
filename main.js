@@ -29,7 +29,7 @@ function handleValidate() {
 
   const e = document.getElementById("selectRaffle");
   const raffleId = e.options[e.selectedIndex].value;
-  fetch(`./static/txs/${raffleId}/initTx.txt`)
+  fetch(`./static/txs/${"61c570eb7cbbe5f1b5d26ced"}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
       console.log(data, 'initTransactionData')
@@ -147,7 +147,7 @@ function handleValidate() {
                     throw new Error(
                       "The Finalization transaction specifies the wrong initialization TXID"
                     );
-
+                   console.log(endObject,'endObject++++++++++@@@@@@@@@')
                   if (!endObject.lastTicketSoldTimestamp) {
                     throw new Error("Raffle doesn't have last ticket timestamp")
                   }
