@@ -78,7 +78,7 @@ function handleValidate() {
           //   throw new Error("Raffle must contain valid additional seeds")
           // }
 
-          fetch(`./static/txs/${raffleId}/ticketIds.txt`)
+          fetch(`./static/txs/${"32f8be27e43a0234bafe21ccb354b1f963ee5236bba866d10c9eb0ef2a7842cb"}/ticketIds.txt`)
             .then((response) => response.text())
             .then((data) => {
               const ticketIds = data.split(/\n/)
