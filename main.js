@@ -42,12 +42,13 @@ function handleValidate() {
             messageParts: [messageBuf],
           } = parseTransaction(transactionData, 1)
           const buf = Buffer.alloc(transactionData.byteLength);
-          const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
 
           const view = new Uint8Array(transactionData);
           for (let i = 0; i < buf.length; ++i) {
             buf[i] = view[i];
           }
+          const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
+
           if (messageType !== 0)
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
           if (!validateSignature(pubKey, signature, [messageBuf]))
