@@ -37,7 +37,7 @@ function handleValidate() {
             signature,
             messageParts: [messageBuf],
           } = parseTransaction(transactionData,1)
-          console.log(messageParts,'messageParts+++',messageBuf)
+          console.log(messageBuf)
           if (messageType !== "RAFFLE_INITIALIZATION")
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
 
@@ -87,9 +87,15 @@ function handleValidate() {
                     const {
                       messageType,
                       signature,
-                      messageParts: [messageBuf],
+                      messageParts: [initTxidBuf, ticketIdBuf],
                     } = parseTransaction(transactionData,2)
-
+                    const buf = Buffer.alloc(transactionData.byteLength);
+                    const view = new Uint8Array(transactionData);
+                    for (let i = 0; i < buf.length; ++i) {
+                      buf[i] = view[i];
+                    }
+                    const initTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
+                    console.log(initTxid,'initTxid+++++++')
                     if (messageType !== "RAFFLE_TICKET_SALE")
                       throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
 
@@ -119,11 +125,9 @@ function parseTransaction(transactionData,expectedMessageParts) {
 
   const buf = Buffer.alloc(transactionData.byteLength);
   const view = new Uint8Array(transactionData);
-  console.log(view, 'view+++++++')
   for (let i = 0; i < buf.length; ++i) {
     buf[i] = view[i];
   }
-  console.log(buf, 'buf++++++++++')
   const data = bsv.Tx.fromBuffer((buf))
   console.log(data, 'parsedData')
   const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
