@@ -192,7 +192,6 @@ function parseTransaction(transactionData, expectedMessageParts) {
   const signature = bufferValues[3];
   const restOfChunks = bufferValues.slice(4);
   const messageParts = restOfChunks.filter((i) => i).map((i) => i);
-  console.log(messageType, 'messageType++++', JSON.parse(messageParts.toString()))
   if (restOfChunks.length > messageParts.length)
     throw new Error(
       "Transaction was expected to end with Message Part variables and nothing else"
