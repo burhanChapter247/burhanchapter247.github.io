@@ -92,15 +92,10 @@ function handleValidate() {
                       messageType,
                       signature,
                       messageParts: [initTxidBuf, ticketIdBuf],
+                      realInitTxid
                     } = parseTransaction(transactionData, 2)
                     console.log(messageType,'messageType++++++++',signature)
-                    const buf = Buffer.alloc(transactionData.byteLength);
-                    const view = new Uint8Array(transactionData);
-                    for (let i = 0; i < buf.length; ++i) {
-                      buf[i] = view[i];
-                    }
-                    const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-                    console.log(realInitTxid, 'initTxid+++++++')
+                    console.log(realInitTxid, 'initTxid+++++++',initTxidBuf)
                     if (messageType !== 1)
                       throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
 
@@ -127,6 +122,7 @@ function handleValidate() {
                     messageType,
                     signature,
                     messageParts: [messageBuf],
+                    realInitTxid
                   } = parseTransaction(transactionData, 1)
                   if (messageType !== 2)
                     throw Error("Finalization TX message type must be RAFFLE_FINALIZING");
@@ -135,19 +131,14 @@ function handleValidate() {
                     throw Error("Finalization TX Signature validation failed");
 
                   const endObject = JSON.parse(messageBuf.toString());
-                  const buf = Buffer.alloc(transactionData.byteLength);
-                  const view = new Uint8Array(transactionData);
-                  for (let i = 0; i < buf.length; ++i) {
-                    buf[i] = view[i];
-                  }
-                  const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-
                   const initTxid = Buffer.from(endObject.initializationTxid, "hex");
+                  console.log(realInitTxid,'realInitTxid',initTxid)
+                  console.log(endObject,'endObject++++++++++@@@@@@@@@')
+
                   if (!initTxid.equals(realInitTxid))
                     throw new Error(
                       "The Finalization transaction specifies the wrong initialization TXID"
                     );
-                   console.log(endObject,'endObject++++++++++@@@@@@@@@')
                   if (!endObject.lastTicketSoldTimestamp) {
                     throw new Error("Raffle doesn't have last ticket timestamp")
                   }
@@ -191,6 +182,8 @@ function parseTransaction(transactionData, expectedMessageParts) {
   const signature = bufferValues[3];
   const restOfChunks = bufferValues.slice(4);
   const messageParts = restOfChunks.filter((i) => i).map((i) => i);
+  const initTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
+
   if (restOfChunks.length > messageParts.length)
     throw new Error(
       "Transaction was expected to end with Message Part variables and nothing else"
@@ -207,11 +200,12 @@ function parseTransaction(transactionData, expectedMessageParts) {
     throw new Error(
       `Transaction was expected to have exactly ${expectedMessageParts} Message Variables, but was ${messageParts.length}`
     );
-  console.log(messageType?.readInt8(), 'messageType?.readInt8()')
+  console.log(initTxid, 'messageType?.readInt8()')
   return {
     messageType: messageType?.readInt8(),
     signature: bsv.Sig.fromBuffer(signature),
     messageParts,
+    initTxid
   };
 }
 
