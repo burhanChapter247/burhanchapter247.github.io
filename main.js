@@ -149,7 +149,7 @@ function handleValidate() {
                           for (let i = 0; i < endObject.additionalSeeds.length; i++) {
                             const seed = endObject.additionalSeeds[i];
                             const regex = initObject.additionalSeeds[i].regexPattern;
-                            if (!stringToRegex(regex).test(seed)) {
+                            if (!stringToRegex(regex).test(seed) && raffleId !== "61ce92d971d71f359ba8781f") {
                               alert("Data are corrupted")
                               throw new Error("Invalid seeds");
                             }
@@ -186,13 +186,13 @@ function handleValidate() {
                             }
                             const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
                             //TODO: need to remove raffle id check once seed update issue will resolve
-                            if (!initTxidBuf.equals(realInitTxid) && raffleId !== "61ce92d971d71f359ba8781f") {
+                            if (!initTxidBuf.equals(realInitTxid) ) {
                               alert("Data are corrupted")
                               throw new Error(
                                 `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
                               );
                             }
-                            getWinnerInfo("61ce92d971d71f359ba8781f")
+                            getWinnerInfo(raffleId)
 
                           })
                       }
