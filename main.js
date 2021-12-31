@@ -36,7 +36,8 @@ function handleValidate() {
             messageType,
             signature,
             messageParts: [messageBuf],
-          } = parseTransaction(transactionData)
+          } = parseTransaction(transactionData,1)
+          console.log(messageParts,'messageParts+++',messageBuf)
           if (messageType !== "RAFFLE_INITIALIZATION")
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
 
@@ -44,7 +45,7 @@ function handleValidate() {
             throw Error("Initialization TX Signature validation failed");
 
           const initObject = JSON.parse(messageBuf.toString());
-
+          console.log(initObject,'initObject+++++')
           if (initObject.noOfTickets < 2) {
             throw new Error("Raffle must have atleast more than 2 tickets");
           }
@@ -87,7 +88,7 @@ function handleValidate() {
                       messageType,
                       signature,
                       messageParts: [messageBuf],
-                    } = parseTransaction(transactionData)
+                    } = parseTransaction(transactionData,2)
 
                     if (messageType !== "RAFFLE_TICKET_SALE")
                       throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
@@ -113,7 +114,7 @@ function handleValidate() {
 
 }
 
-function parseTransaction(transactionData) {
+function parseTransaction(transactionData,expectedMessageParts) {
   const buf = Buffer.alloc(transactionData.byteLength);
   const view = new Uint8Array(transactionData);
   console.log(view, 'view+++++++')
