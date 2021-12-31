@@ -23,7 +23,7 @@ function handleValidate() {
 
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
   const pubKey = bsv.PubKey.fromPrivKey(
-    bsv.PrivKey.Testnet.fromString("cRi7Ldcg7uioavPRz3jNTQ7YPPZpKjgRtiwhcE5B4YZyyL1PHmxS")
+    bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   );
 
 
@@ -54,6 +54,7 @@ function handleValidate() {
             throw Error("Initialization TX Signature validation failed");
 
           const initObject = JSON.parse(messageBuf.toString());
+          console.log(initObject,'initObject+++++++++++')
           if (initObject.noOfTickets < 2) {
             throw new Error("Raffle must have atleast more than 2 tickets");
           }
@@ -85,6 +86,7 @@ function handleValidate() {
             .then((response) => response.text())
             .then((data) => {
               const ticketIds = data.split(/\n/)
+              console.log(ticketIds.length,'ticketIds.length',initObject.noOfTickets)
               // if (ticketIds.length !== initObject.noOfTickets) {
               //   throw new Error("Ticket count does not match")
               // }
@@ -116,7 +118,7 @@ function handleValidate() {
                   })
               }
             })
-          fetch(`./static/txs/${"61c570eb7cbbe5f1b5d26ced"}/finalizeTx.txt`)
+          fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
             .then((response) => response.text())
             .then((data) => {
               let finalizeTxId=data.split(/\n/)
