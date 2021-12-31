@@ -1,16 +1,17 @@
 (function () {
+
   const selectRaffle = document.getElementById("selectRaffle");
   // As with JSON, use the Fetch API & ES6
   fetch("./static/gameIdList.txt")
     .then((response) => response.text())
     .then((data) => {
-      console.log(data, 'data+++++++++++')
+      
       // Do something with your data
       let raffleList = data.split(/\n/)
       for (const raffle of raffleList) {
         var option = document.createElement("option");
-        option.value = raffle;
-        option.text = raffle;
+        option.value = raffle.split("-")[0];
+        option.text = raffle.split("-")[0];
         selectRaffle.appendChild(option);
       }
     });
@@ -23,7 +24,8 @@ function handleValidate() {
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
   const pubKey = bsv.PubKey.fromPrivKey(
     bsv.PrivKey.Testnet.fromString("cRi7Ldcg7uioavPRz3jNTQ7YPPZpKjgRtiwhcE5B4YZyyL1PHmxS")
-  ).toString();
+  );
+
   const e = document.getElementById("selectRaffle");
   const raffleId = e.options[e.selectedIndex].value;
   fetch(`./static/txs/${raffleId}/initTx.txt`)
@@ -41,7 +43,7 @@ function handleValidate() {
           console.log(messageBuf,messageBuf,'initialze transaction')
           if (messageType !== 0)
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
-            const data =validateSignature(pubKey, signature, [messageBuf])
+            const data =validateSignature(bsv.PubKey.fromString(pubKey), signature, [messageBuf])
             console.log(data,'data++++++++++++')
           // if (!validateSignature(pubKey, signature, [messageBuf]))
           //   throw Error("Initialization TX Signature validation failed");
@@ -67,13 +69,13 @@ function handleValidate() {
             throw new Error("Invalid initial seed")
           }
 
-          if (!initObject.additionalSeeds?.length) {
-            throw new Error("Raffle must contain atleast one additional seed");
-          }
+          // if (!initObject.additionalSeeds?.length) {
+          //   throw new Error("Raffle must contain atleast one additional seed");
+          // }
 
-          if (!initObject.additionalSeeds.every(additionalSeed => additionalSeed.description && additionalSeed.regexPattern)) {
-            throw new Error("Raffle must contain valid additional seeds")
-          }
+          // if (!initObject.additionalSeeds.every(additionalSeed => additionalSeed.description && additionalSeed.regexPattern)) {
+          //   throw new Error("Raffle must contain valid additional seeds")
+          // }
 
           fetch(`./static/txs/${raffleId}/ticketIds.txt`)
             .then((response) => response.text())
@@ -97,15 +99,15 @@ function handleValidate() {
                       buf[i] = view[i];
                     }
                     const initTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-                    console.log(initTxid,'initTxid+++++++')
-                    if (messageType !== "RAFFLE_TICKET_SALE")
+                    console.log(initTxid,'initTxid+++++++',messageType)
+                    if (messageType !== 1)
                       throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
 
-                    if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf]))
-                      throw Error("Finalization TX Signature validation failed");
+                    // if (!validateSignature(bsv.PubKey.fromString(pubKey), signature, [initTxidBuf, ticketIdBuf]))
+                    //   throw Error("Finalization TX Signature validation failed");
 
                     const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-
+                    console.log(ticketId,'ticketId')
                     if (!initTxidBuf.equals(realInitTxid)) {
                       throw new Error(
                         `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
