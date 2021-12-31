@@ -32,87 +32,15 @@ function handleValidate() {
       console.log(response, 'response', response.ok)
       if (!response.ok) {
         alert("Game result have not been announced yet")
-
+        return
       }
-      return response.text()
-    })
-    .catch(error => {
-      console.log(error, 'error+++++++')
-      alert("Game result have not been announced yet")
-    })
-  fetch(`./static/txs/${raffleId}/initTx.txt`)
-    .then((response) => response.text())
-    .then((data) => {
-      let transactionId = data.split(/\n/).filter(Boolean)
-
-      fetch(`${S3BucketBaseUrl}/${transactionId[0]}.btx`)
-        .then((response) => response.arrayBuffer())
-        .then((transactionData) => {
-          const {
-            messageType,
-            signature,
-            messageParts: [messageBuf],
-          } = parseTransaction(transactionData, 1)
-          const buf = Buffer.alloc(transactionData.byteLength);
-
-          const view = new Uint8Array(transactionData);
-          for (let i = 0; i < buf.length; ++i) {
-            buf[i] = view[i];
-          }
-          const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-          if (messageType !== 0) {
-            alert("Data are corrupted")
-            return
-            throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
-
-          }
-          if (!validateSignature(pubKey, signature, [messageBuf])) {
-            alert("Data are corrupted")
-
-            throw Error("Initialization TX Signature validation failed");
-          }
-          const initObject = JSON.parse(messageBuf.toString());
-          console.log(initObject, 'initObject+++++++++++')
-          if (initObject.noOfTickets < 2) {
-            alert("Data are corrupted")
-            throw new Error("Game must have atleast more than 2 tickets");
-          }
-          if (!initObject.rewards.length) {
-            alert("Data are corrupted")
-            throw new Error("Game must have atleast 1 reward");
-          }
-
-          if (initObject.rewards.every((item) => item.rewardCount > 1 && item.rewardPrice && item.rewardTitle && item.description && item.rank > 0)) {
-            alert("Data are corrupted")
-            throw new Error("Game rewards not have valid data");
-
-          }
-
-          if (!initObject.initialSeed) {
-            alert("Data are corrupted")
-            throw new Error("Game must contain the initial seeds")
-          }
-          const regexExp = /^[a-f0-9]{64}$/gi;
-          if (!regexExp.test(initObject.initialSeed)) {
-            alert("Data are corrupted")
-            throw new Error("Invalid initial seed")
-          }
-
-          if (!initObject.additionalSeeds?.length) {
-            alert("Data are corrupted")
-            throw new Error("Game must contain at least one additional seed");
-          }
-
-          if (!initObject.additionalSeeds.every(additionalSeed => additionalSeed.description && additionalSeed.regexPattern)) {
-            alert("Data are corrupted")
-            throw new Error("Game must contain valid additional seeds")
-          }
-          alert("Initialization transaction has been valid")
-          fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
-            .then((response) => response.text())
-            .then((data) => {
-              let finalizeTxId = data.split(/\n/).filter(Boolean)
-              fetch(`${S3BucketBaseUrl}/${finalizeTxId[0]}.btx`)
+      else {
+        fetch(`./static/txs/${raffleId}/initTx.txt`)
+          .then((response) => response.text())
+          .then((data) => {
+            const initializeTxId = data.split(/\n/)[0]
+            if (initializeTxId) {
+              fetch(`${S3BucketBaseUrl}/${initializeTxId}.btx`)
                 .then((response) => response.arrayBuffer())
                 .then((transactionData) => {
                   const {
@@ -120,92 +48,166 @@ function handleValidate() {
                     signature,
                     messageParts: [messageBuf],
                   } = parseTransaction(transactionData, 1)
-                  if (messageType !== 2) {
+                  const buf = Buffer.alloc(transactionData.byteLength);
+
+                  const view = new Uint8Array(transactionData);
+                  for (let i = 0; i < buf.length; ++i) {
+                    buf[i] = view[i];
+                  }
+                  const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
+                  if (messageType !== 0) {
                     alert("Data are corrupted")
-                    throw Error("Finalization TX message type must be RAFFLE_FINALIZING");
+                    return
+                    throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
+
                   }
                   if (!validateSignature(pubKey, signature, [messageBuf])) {
                     alert("Data are corrupted")
-                    throw Error("Finalization TX Signature validation failed");
+
+                    throw Error("Initialization TX Signature validation failed");
                   }
-                  const endObject = JSON.parse(messageBuf.toString());
-                  const initTxid = Buffer.from(endObject.initializationTxid, "hex");
-                  console.log(realInitTxid, 'realInitTxid', initTxid)
-                  console.log(endObject, 'endObject++++++++++@@@@@@@@@')
-                  if (!initTxid.equals(realInitTxid)) {
+                  const initObject = JSON.parse(messageBuf.toString());
+                  console.log(initObject, 'initObject+++++++++++')
+                  if (initObject.noOfTickets < 2) {
                     alert("Data are corrupted")
-                    throw new Error(
-                      "The Finalization transaction specifies the wrong initialization TXID"
-                    );
+                    throw new Error("Game must have atleast more than 2 tickets");
                   }
-                  if (!endObject.lastTicketSoldTimestamp) {
+                  if (!initObject.rewards.length) {
                     alert("Data are corrupted")
-                    throw new Error("Raffle doesn't have last ticket timestamp")
-                  }
-                  if (!endObject.additionalSeeds.length || !endObject.additionalSeeds[0]) {
-                    alert("Data are corrupted")
-                    throw new Error("Invalid additional seeds")
-                  }
-                  if (endObject.additionalSeeds.length !== initObject.additionalSeeds.length) {
-                    alert("Data are corrupted")
-                    throw new Error("Expected additional seeds not found")
+                    throw new Error("Game must have atleast 1 reward");
                   }
 
-                  for (let i = 0; i < endObject.additionalSeeds.length; i++) {
-                    const seed = endObject.additionalSeeds[i];
-                    const regex = initObject.additionalSeeds[i].regexPattern;
-                    if (!stringToRegex(regex).test(seed)) {
-                      alert("Data are corrupted")
-                      throw new Error("Invalid seeds");
-                    }
-                  }
-                  alert("Finalization transaction has been valid")
+                  if (initObject.rewards.every((item) => item.rewardCount > 1 && item.rewardPrice && item.rewardTitle && item.description && item.rank > 0)) {
+                    alert("Data are corrupted")
+                    throw new Error("Game rewards not have valid data");
 
+                  }
+
+                  if (!initObject.initialSeed) {
+                    alert("Data are corrupted")
+                    throw new Error("Game must contain the initial seeds")
+                  }
+                  const regexExp = /^[a-f0-9]{64}$/gi;
+                  if (!regexExp.test(initObject.initialSeed)) {
+                    alert("Data are corrupted")
+                    throw new Error("Invalid initial seed")
+                  }
+
+                  if (!initObject.additionalSeeds?.length) {
+                    alert("Data are corrupted")
+                    throw new Error("Game must contain at least one additional seed");
+                  }
+
+                  if (!initObject.additionalSeeds.every(additionalSeed => additionalSeed.description && additionalSeed.regexPattern)) {
+                    alert("Data are corrupted")
+                    throw new Error("Game must contain valid additional seeds")
+                  }
+                  alert("Initialization transaction has been valid")
+                  fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
+                    .then((response) => response.text())
+                    .then((data) => {
+                      let finalizeTxId = data.split(/\n/)[0]
+                      fetch(`${S3BucketBaseUrl}/${finalizeTxId}.btx`)
+                        .then((response) => response.arrayBuffer())
+                        .then((transactionData) => {
+                          const {
+                            messageType,
+                            signature,
+                            messageParts: [messageBuf],
+                          } = parseTransaction(transactionData, 1)
+                          if (messageType !== 2) {
+                            alert("Data are corrupted")
+                            throw Error("Finalization TX message type must be RAFFLE_FINALIZING");
+                          }
+                          if (!validateSignature(pubKey, signature, [messageBuf])) {
+                            alert("Data are corrupted")
+                            throw Error("Finalization TX Signature validation failed");
+                          }
+                          const endObject = JSON.parse(messageBuf.toString());
+                          const initTxid = Buffer.from(endObject.initializationTxid, "hex");
+                          console.log(realInitTxid, 'realInitTxid', initTxid)
+                          console.log(endObject, 'endObject++++++++++@@@@@@@@@')
+                          if (!initTxid.equals(realInitTxid)) {
+                            alert("Data are corrupted")
+                            throw new Error(
+                              "The Finalization transaction specifies the wrong initialization TXID"
+                            );
+                          }
+                          if (!endObject.lastTicketSoldTimestamp) {
+                            alert("Data are corrupted")
+                            throw new Error("Raffle doesn't have last ticket timestamp")
+                          }
+                          if (!endObject.additionalSeeds.length || !endObject.additionalSeeds[0]) {
+                            alert("Data are corrupted")
+                            throw new Error("Invalid additional seeds")
+                          }
+                          if (endObject.additionalSeeds.length !== initObject.additionalSeeds.length) {
+                            alert("Data are corrupted")
+                            throw new Error("Expected additional seeds not found")
+                          }
+
+                          for (let i = 0; i < endObject.additionalSeeds.length; i++) {
+                            const seed = endObject.additionalSeeds[i];
+                            const regex = initObject.additionalSeeds[i].regexPattern;
+                            if (!stringToRegex(regex).test(seed)) {
+                              alert("Data are corrupted")
+                              throw new Error("Invalid seeds");
+                            }
+                          }
+                          alert("Finalization transaction has been valid")
+
+                        })
+                    })
+                  fetch(`./static/txs/${raffleId}/ticketIds.txt`)
+                    .then((response) => response.text())
+                    .then((data) => {
+                      const ticketIds = data.split(/\n/).filter(Boolean)
+                      if (ticketIds.length !== initObject.noOfTickets) {
+                        throw new Error("Ticket count does not match")
+                      }
+                      for (ticketId of ticketIds) {
+                        fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
+                          .then((response) => response.arrayBuffer())
+                          .then((transactionData) => {
+                            const {
+                              messageType,
+                              signature,
+                              messageParts: [initTxidBuf, ticketIdBuf],
+                            } = parseTransaction(transactionData, 2)
+                            console.log(messageType, 'messageType++++++++', signature)
+                            console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
+                            if (messageType !== 1) {
+                              alert("Data are corrupted")
+                              throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
+                            }
+                            if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf])) {
+                              alert("Data are corrupted")
+                              throw Error("Finalization TX Signature validation failed");
+                            }
+                            const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
+                            //TODO: need to remove raffle id check once seed update issue will resolve
+                            if (!initTxidBuf.equals(realInitTxid) && raffleId !== "61ce92d971d71f359ba8781f") {
+                              alert("Data are corrupted")
+                              throw new Error(
+                                `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
+                              );
+                            }
+                            getWinnerInfo("61ce92d971d71f359ba8781f")
+
+                          })
+                      }
+                    })
                 })
-            })
-          fetch(`./static/txs/${raffleId}/ticketIds.txt`)
-            .then((response) => response.text())
-            .then((data) => {
-              const ticketIds = data.split(/\n/).filter(Boolean)
-              if (ticketIds.length !== initObject.noOfTickets) {
-                throw new Error("Ticket count does not match")
-              }
-              for (ticketId of ticketIds) {
-                fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
-                  .then((response) => response.arrayBuffer())
-                  .then((transactionData) => {
-                    const {
-                      messageType,
-                      signature,
-                      messageParts: [initTxidBuf, ticketIdBuf],
-                    } = parseTransaction(transactionData, 2)
-                    console.log(messageType, 'messageType++++++++', signature)
-                    console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
-                    if (messageType !== 1) {
-                      alert("Data are corrupted")
-                      throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
-                    }
-                    if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf])) {
-                      alert("Data are corrupted")
-                      throw Error("Finalization TX Signature validation failed");
-                    }
-                    const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                    //TODO: need to remove raffle id check once seed update issue will resolve
-                    if (!initTxidBuf.equals(realInitTxid) && raffleId !== "61ce92d971d71f359ba8781f") {
-                      alert("Data are corrupted")
-                      throw new Error(
-                        `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
-                      );
-                    }
-                    getWinnerInfo("61ce92d971d71f359ba8781f")
+            }
+          })
 
-                  })
-              }
-            })
-        })
-
+      }
+    })
+    .catch(error => {
+      console.log(error, 'error+++++++')
 
     })
+
 
 }
 
