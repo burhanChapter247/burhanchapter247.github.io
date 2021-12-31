@@ -5,7 +5,7 @@
   fetch("./static/gameIdList.txt")
     .then((response) => response.text())
     .then((data) => {
-      
+
       // Do something with your data
       let raffleList = data.split(/\n/)
       for (const raffle of raffleList) {
@@ -20,13 +20,13 @@
 
 function handleValidate() {
   const bsv = window.bsvjs
-  
+
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
   const pubKey = bsv.PubKey.fromPrivKey(
     bsv.PrivKey.Testnet.fromString("cRi7Ldcg7uioavPRz3jNTQ7YPPZpKjgRtiwhcE5B4YZyyL1PHmxS")
   );
 
-  
+
   const e = document.getElementById("selectRaffle");
   const raffleId = e.options[e.selectedIndex].value;
   fetch(`./static/txs/${raffleId}/initTx.txt`)
@@ -40,17 +40,14 @@ function handleValidate() {
             messageType,
             signature,
             messageParts: [messageBuf],
-          } = parseTransaction(transactionData,1)
-          console.log(messageBuf,messageBuf,'initialze transaction')
+          } = parseTransaction(transactionData, 1)
           if (messageType !== 0)
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
-            const data =validateSignature(pubKey, signature, [messageBuf])
-            console.log(data,'data++++++++++++')
+          const data = validateSignature(pubKey, signature, [messageBuf])
           // if (!validateSignature(pubKey, signature, [messageBuf]))
           //   throw Error("Initialization TX Signature validation failed");
 
           const initObject = JSON.parse(messageBuf.toString());
-          console.log(initObject,'initObject+++++')
           if (initObject.noOfTickets < 2) {
             throw new Error("Raffle must have atleast more than 2 tickets");
           }
@@ -82,9 +79,10 @@ function handleValidate() {
             .then((response) => response.text())
             .then((data) => {
               const ticketIds = data.split(/\n/)
-              if (ticketIds.length !== initObject.noOfTickets) {
-                throw new Error("Ticket count does not match")
-              }
+              // if (ticketIds.length !== initObject.noOfTickets) {
+              //   throw new Error("Ticket count does not match")
+              // }
+              console.log(ticketIds, 'ticketIdsticketIds')
               for (ticketId of ticketIds) {
                 fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
                   .then((response) => response.arrayBuffer())
@@ -93,22 +91,23 @@ function handleValidate() {
                       messageType,
                       signature,
                       messageParts: [initTxidBuf, ticketIdBuf],
-                    } = parseTransaction(transactionData,2)
+                    } = parseTransaction(transactionData, 2)
+                    console.log(messageType,'messageType++++++++',signature)
                     const buf = Buffer.alloc(transactionData.byteLength);
                     const view = new Uint8Array(transactionData);
                     for (let i = 0; i < buf.length; ++i) {
                       buf[i] = view[i];
                     }
                     const initTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-                    console.log(initTxid,'initTxid+++++++',messageType)
+                    console.log(initTxid, 'initTxid+++++++')
                     if (messageType !== 1)
                       throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
 
-                    // if (!validateSignature(bsv.PubKey.fromString(pubKey), signature, [initTxidBuf, ticketIdBuf]))
-                    //   throw Error("Finalization TX Signature validation failed");
+                    if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf]))
+                      throw Error("Finalization TX Signature validation failed");
 
                     const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                    console.log(ticketId,'ticketId')
+                    console.log(ticketId, 'ticketId')
                     if (!initTxidBuf.equals(realInitTxid)) {
                       throw new Error(
                         `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
@@ -117,7 +116,58 @@ function handleValidate() {
                   })
               }
             })
+          fetch(`./static/txs/${"61c570eb7cbbe5f1b5d26ced"}/finalizeTx.txt`)
+            .then((response) => response.text())
+            .then((data) => {
+              fetch(`${S3BucketBaseUrl}/${data}.btx`)
+                .then((response) => response.arrayBuffer())
+                .then((transactionData) => {
+                  const {
+                    messageType,
+                    signature,
+                    messageParts: [messageBuf],
+                  } = parseTransaction(transactionData, 1)
+                  if (messageType !== 2)
+                    throw Error("Finalization TX message type must be RAFFLE_FINALIZING");
 
+                  if (!validateSignature(pubKey, signature, [messageBuf]))
+                    throw Error("Finalization TX Signature validation failed");
+
+                  const endObject = JSON.parse(messageBuf.toString());
+                  const buf = Buffer.alloc(transactionData.byteLength);
+                  const view = new Uint8Array(transactionData);
+                  for (let i = 0; i < buf.length; ++i) {
+                    buf[i] = view[i];
+                  }
+                  const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
+
+                  const initTxid = Buffer.from(endObject.initializationTxid, "hex");
+                  if (!initTxid.equals(realInitTxid))
+                    throw new Error(
+                      "The Finalization transaction specifies the wrong initialization TXID"
+                    );
+
+                  if (!endObject.lastTicketSoldTimestamp) {
+                    throw new Error("Raffle doesn't have last ticket timestamp")
+                  }
+                  if (!endObject.additionalSeeds.length || !endObject.additionalSeeds[0]) {
+                    throw new Error("Invalid additional seeds")
+                  }
+                  if (endObject.additionalSeeds.length !== initObject.additionalSeeds.length) {
+                    throw new Error("Expected additional seeds not found")
+                  }
+
+                  for (let i = 0; i < endObject.additionalSeeds.length; i++) {
+                    const seed = endObject.additionalSeeds[i];
+                    const regex = initObject.additionalSeeds[i].regexPattern;
+                    // TODO: validate that the seed matches the the regex
+                    if (!stringToRegex(regex).test(seed)) {
+                      throw new Error("Invalid seeds");
+                    }
+                  }
+
+                })
+            })
         })
 
 
@@ -125,7 +175,7 @@ function handleValidate() {
 
 }
 
-function parseTransaction(transactionData,expectedMessageParts) {
+function parseTransaction(transactionData, expectedMessageParts) {
   const bsv = window.bsvjs
 
   const buf = Buffer.alloc(transactionData.byteLength);
@@ -141,7 +191,7 @@ function parseTransaction(transactionData,expectedMessageParts) {
   const signature = bufferValues[3];
   const restOfChunks = bufferValues.slice(4);
   const messageParts = restOfChunks.filter((i) => i).map((i) => i);
-  console.log(messageType,'messageType++++',JSON.parse(messageParts.toString()))
+  console.log(messageType, 'messageType++++', JSON.parse(messageParts.toString()))
   if (restOfChunks.length > messageParts.length)
     throw new Error(
       "Transaction was expected to end with Message Part variables and nothing else"
@@ -158,7 +208,7 @@ function parseTransaction(transactionData,expectedMessageParts) {
     throw new Error(
       `Transaction was expected to have exactly ${expectedMessageParts} Message Variables, but was ${messageParts.length}`
     );
-   console.log(messageType?.readInt8(),'messageType?.readInt8()')
+  console.log(messageType?.readInt8(), 'messageType?.readInt8()')
   return {
     messageType: messageType?.readInt8(),
     signature: bsv.Sig.fromBuffer(signature),
@@ -174,6 +224,6 @@ function validateSignature(
   const bsv = window.bsvjs
 
   const hash = bsv.Hash.sha256(Buffer.concat(messageParts));
-  console.log(hash,'hash',signature,'signature',pubKey)
+  console.log(hash, 'hash', signature, 'signature', pubKey)
   return bsv.Ecdsa.verify(hash, signature, pubKey);
 }
