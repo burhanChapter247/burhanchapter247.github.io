@@ -11,7 +11,7 @@
       for (const raffle of raffleList) {
         var option = document.createElement("option");
         option.value = raffle.split("-")[0];
-        option.text = raffle.split("-")[0];
+        option.text = raffle.split("-")[1];
         selectRaffle.appendChild(option);
       }
     });
@@ -29,11 +29,11 @@ function handleValidate() {
 
   const e = document.getElementById("selectRaffle");
   const raffleId = e.options[e.selectedIndex].value;
-  fetch(`./static/txs/${"61c570eb7cbbe5f1b5d26ced"}/initTx.txt`)
+  fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
-      console.log(data, 'initTransactionData')
-      fetch(`${S3BucketBaseUrl}/32f8be27e43a0234bafe21ccb354b1f963ee5236bba866d10c9eb0ef2a7842cb.btx`)
+      let transactionId = data.split(/\n/)
+      fetch(`${S3BucketBaseUrl}/${transactionId[0]}.btx`)
         .then((response) => response.arrayBuffer())
         .then((transactionData) => {
           const {
@@ -81,14 +81,13 @@ function handleValidate() {
           //   throw new Error("Raffle must contain valid additional seeds")
           // }
 
-          fetch(`./static/txs/${"61c570eb7cbbe5f1b5d26ced"}/ticketIds.txt`)
+          fetch(`./static/txs/${raffleId}/ticketIds.txt`)
             .then((response) => response.text())
             .then((data) => {
               const ticketIds = data.split(/\n/)
               // if (ticketIds.length !== initObject.noOfTickets) {
               //   throw new Error("Ticket count does not match")
               // }
-              console.log(ticketIds, 'ticketIdsticketIds', initObject.noOfTickets)
               for (ticketId of ticketIds) {
                 fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
                   .then((response) => response.arrayBuffer())
@@ -120,7 +119,8 @@ function handleValidate() {
           fetch(`./static/txs/${"61c570eb7cbbe5f1b5d26ced"}/finalizeTx.txt`)
             .then((response) => response.text())
             .then((data) => {
-              fetch(`${S3BucketBaseUrl}/${data}.btx`)
+              let finalizeTxId=data.split(/\n/)
+              fetch(`${S3BucketBaseUrl}/${finalizeTxId[0]}.btx`)
                 .then((response) => response.arrayBuffer())
                 .then((transactionData) => {
                   const {
@@ -139,10 +139,10 @@ function handleValidate() {
                   console.log(realInitTxid, 'realInitTxid', initTxid)
                   console.log(endObject, 'endObject++++++++++@@@@@@@@@')
 
-                  if (!initTxid.equals(realInitTxid))
-                    throw new Error(
-                      "The Finalization transaction specifies the wrong initialization TXID"
-                    );
+                  // if (!initTxid.equals(realInitTxid))
+                  //   throw new Error(
+                  //     "The Finalization transaction specifies the wrong initialization TXID"
+                  //   );
                   if (!endObject.lastTicketSoldTimestamp) {
                     throw new Error("Raffle doesn't have last ticket timestamp")
                   }
@@ -179,9 +179,7 @@ function parseTransaction(transactionData, expectedMessageParts) {
     buf[i] = view[i];
   }
   const data = bsv.Tx.fromBuffer((buf))
-  console.log(data, 'parsedData')
   const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
-  console.log(bufferValues, 'bufferValues+++++++')
   const messageType = bufferValues[2];
   const signature = bufferValues[3];
   const restOfChunks = bufferValues.slice(4);
