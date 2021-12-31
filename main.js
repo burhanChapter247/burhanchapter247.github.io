@@ -26,7 +26,14 @@ function handleValidate() {
   const pubKey = bsv.PubKey.fromPrivKey(
     bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   );
-
+  fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
+    .then((response) => response.text())
+    .then((data) => {
+      let finalizeTxId = data.split(/\n/).filter(Boolean)
+      if(!(finalizeTxId && finalizeTxId.length)){
+        alert("Game result have not been announced yet")
+      }
+    })
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
@@ -161,7 +168,7 @@ function handleValidate() {
                   })
               }
             })
-            getWinnerInfo(raffleId)
+          getWinnerInfo(raffleId)
         })
 
 
@@ -230,7 +237,7 @@ function stringToRegex(str) {
   return new RegExp(main, options)
 }
 
-function getWinnerInfo  (gameId)  {
+function getWinnerInfo(gameId) {
   const winnerInfoElement = document.getElementById("winnerInfo");
   winnerInfoElement.innerHTML = "<p>Loading........</p>";
   fetch(`https://ugoflip.herokuapp.com/v1/raffle/${gameId}/reward-info`)
@@ -240,9 +247,8 @@ function getWinnerInfo  (gameId)  {
         let innerElement = "<ul>";
         for (const reward of responseData.data) {
           if (reward.winningTicketIds.length) {
-            innerElement += `<li>Reward: ${reward.rewardTitle}, Price: ${
-              reward.rewardPrice
-            }, Winning Ticket Ids: ${reward.winningTicketIds.join(",")}</li>`;
+            innerElement += `<li>Reward: ${reward.rewardTitle}, Price: ${reward.rewardPrice
+              }, Winning Ticket Ids: ${reward.winningTicketIds.join(",")}</li>`;
           }
         }
 
