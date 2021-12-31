@@ -19,6 +19,12 @@
 })();
 
 function handleValidate() {
+  fetch(`./static/txs/${"61c9bba9f56664557f31fe66"}/finalizeTx.txt`)
+    .then((response) => response.text())
+
+    .catch(error => {
+      alert("Game result hav not been announced yet")
+    })
   const bsv = window.bsvjs
   const e = document.getElementById("selectGame");
   const raffleId = e.options[e.selectedIndex].value;
@@ -26,16 +32,7 @@ function handleValidate() {
   const pubKey = bsv.PubKey.fromPrivKey(
     bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   );
-  fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
-    .then((response) => {
-      console.log(response)
-      return response.text()})
-    .then((data) => {
-      let finalizeTxId = data.split(/\n/).filter(Boolean)
-      if(!(finalizeTxId && finalizeTxId.length)){
-        alert("Game result have not been announced yet")
-      }
-    })
+
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
@@ -126,17 +123,17 @@ function handleValidate() {
                     throw new Error("Expected additional seeds not found")
                   }
 
-                  for (let i = 0; i < endObject.additionalSeeds.length; i++) {
-                    const seed = endObject.additionalSeeds[i];
-                    const regex = initObject.additionalSeeds[i].regexPattern;
-                    if (!stringToRegex(regex).test(seed)) {
-                      throw new Error("Invalid seeds");
-                    }
-                  }
+                  // for (let i = 0; i < endObject.additionalSeeds.length; i++) {
+                  //   const seed = endObject.additionalSeeds[i];
+                  //   const regex = initObject.additionalSeeds[i].regexPattern;
+                  //   if (!stringToRegex(regex).test(seed)) {
+                  //     throw new Error("Invalid seeds");
+                  //   }
+                  // }
+                  alert("Finalization transaction has been valid")
 
                 })
             })
-          alert("Finalization transaction has been valid")
           fetch(`./static/txs/${raffleId}/ticketIds.txt`)
             .then((response) => response.text())
             .then((data) => {
@@ -167,10 +164,11 @@ function handleValidate() {
                         `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
                       );
                     }
+                    getWinnerInfo(raffleId)
+
                   })
               }
             })
-          getWinnerInfo(raffleId)
         })
 
 
@@ -249,8 +247,8 @@ function getWinnerInfo(gameId) {
         let innerElement = "<ul>";
         for (const reward of responseData.data) {
           if (reward.winningTicketIds.length) {
-            innerElement += `<li><b>Reward</b>: ${reward.rewardTitle}</li>, <li><b>Price</b>: ${reward.rewardPrice
-              }</li>, <li><b>Winning Ticket Ids</b>: ${reward.winningTicketIds.join(",")}</li>`;
+            innerElement += `<li>Reward: ${reward.rewardTitle}, Price: ${reward.rewardPrice
+              }, Winning Ticket Ids: ${reward.winningTicketIds.join(",")}</li>`;
           }
         }
 
