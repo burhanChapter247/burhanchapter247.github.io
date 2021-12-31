@@ -19,12 +19,7 @@
 })();
 
 function handleValidate() {
-  fetch(`./static/txs/${"61c9bba9f56664557f31fe66"}/finalizeTx.txt`)
-    .then((response) => response.text())
 
-    .catch(error => {
-      alert("Game result hav not been announced yet")
-    })
   const bsv = window.bsvjs
   const e = document.getElementById("selectGame");
   const raffleId = e.options[e.selectedIndex].value;
@@ -32,7 +27,13 @@ function handleValidate() {
   const pubKey = bsv.PubKey.fromPrivKey(
     bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   );
+  fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
+    .then((response) => response.text())
 
+    .catch(error => {
+      console.log(error, 'error+++++++')
+      alert("Game result hav not been announced yet")
+    })
   fetch(`./static/txs/${raffleId}/initTx.txt`)
     .then((response) => response.text())
     .then((data) => {
@@ -53,37 +54,50 @@ function handleValidate() {
             buf[i] = view[i];
           }
           const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-          if (messageType !== 0)
+          if (messageType !== 0) {
+            alert("Data are corrupted")
             throw Error("Initialization TX message type must be RAFFLE_INITIALIZATION");
-          if (!validateSignature(pubKey, signature, [messageBuf]))
-            throw Error("Initialization TX Signature validation failed");
 
+          }
+          if (!validateSignature(pubKey, signature, [messageBuf])) {
+            alert("Data are corrupted")
+
+            throw Error("Initialization TX Signature validation failed");
+          }
           const initObject = JSON.parse(messageBuf.toString());
           console.log(initObject, 'initObject+++++++++++')
           if (initObject.noOfTickets < 2) {
+            alert("Data are corrupted")
             throw new Error("Game must have atleast more than 2 tickets");
           }
           if (!initObject.rewards.length) {
+            alert("Data are corrupted")
             throw new Error("Game must have atleast 1 reward");
           }
 
           if (initObject.rewards.every((item) => item.rewardCount > 1 && item.rewardPrice && item.rewardTitle && item.description && item.rank > 0)) {
+            alert("Data are corrupted")
             throw new Error("Game rewards not have valid data");
+
           }
 
           if (!initObject.initialSeed) {
+            alert("Data are corrupted")
             throw new Error("Game must contain the initial seeds")
           }
           const regexExp = /^[a-f0-9]{64}$/gi;
           if (!regexExp.test(initObject.initialSeed)) {
+            alert("Data are corrupted")
             throw new Error("Invalid initial seed")
           }
 
           if (!initObject.additionalSeeds?.length) {
+            alert("Data are corrupted")
             throw new Error("Game must contain at least one additional seed");
           }
 
           if (!initObject.additionalSeeds.every(additionalSeed => additionalSeed.description && additionalSeed.regexPattern)) {
+            alert("Data are corrupted")
             throw new Error("Game must contain valid additional seeds")
           }
           alert("Initialization transaction has been valid")
@@ -99,37 +113,45 @@ function handleValidate() {
                     signature,
                     messageParts: [messageBuf],
                   } = parseTransaction(transactionData, 1)
-                  if (messageType !== 2)
+                  if (messageType !== 2) {
+                    alert("Data are corrupted")
                     throw Error("Finalization TX message type must be RAFFLE_FINALIZING");
-
-                  if (!validateSignature(pubKey, signature, [messageBuf]))
+                  }
+                  if (!validateSignature(pubKey, signature, [messageBuf])) {
+                    alert("Data are corrupted")
                     throw Error("Finalization TX Signature validation failed");
-
+                  }
                   const endObject = JSON.parse(messageBuf.toString());
                   const initTxid = Buffer.from(endObject.initializationTxid, "hex");
                   console.log(realInitTxid, 'realInitTxid', initTxid)
                   console.log(endObject, 'endObject++++++++++@@@@@@@@@')
-                  if (!initTxid.equals(realInitTxid))
+                  if (!initTxid.equals(realInitTxid)) {
+                    alert("Data are corrupted")
                     throw new Error(
                       "The Finalization transaction specifies the wrong initialization TXID"
                     );
+                  }
                   if (!endObject.lastTicketSoldTimestamp) {
+                    alert("Data are corrupted")
                     throw new Error("Raffle doesn't have last ticket timestamp")
                   }
                   if (!endObject.additionalSeeds.length || !endObject.additionalSeeds[0]) {
+                    alert("Data are corrupted")
                     throw new Error("Invalid additional seeds")
                   }
                   if (endObject.additionalSeeds.length !== initObject.additionalSeeds.length) {
+                    alert("Data are corrupted")
                     throw new Error("Expected additional seeds not found")
                   }
 
-                  // for (let i = 0; i < endObject.additionalSeeds.length; i++) {
-                  //   const seed = endObject.additionalSeeds[i];
-                  //   const regex = initObject.additionalSeeds[i].regexPattern;
-                  //   if (!stringToRegex(regex).test(seed)) {
-                  //     throw new Error("Invalid seeds");
-                  //   }
-                  // }
+                  for (let i = 0; i < endObject.additionalSeeds.length; i++) {
+                    const seed = endObject.additionalSeeds[i];
+                    const regex = initObject.additionalSeeds[i].regexPattern;
+                    if (!stringToRegex(regex).test(seed)) {
+                      alert("Data are corrupted")
+                      throw new Error("Invalid seeds");
+                    }
+                  }
                   alert("Finalization transaction has been valid")
 
                 })
@@ -152,19 +174,23 @@ function handleValidate() {
                     } = parseTransaction(transactionData, 2)
                     console.log(messageType, 'messageType++++++++', signature)
                     console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
-                    if (messageType !== 1)
+                    if (messageType !== 1) {
+                      alert("Data are corrupted")
                       throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
-
-                    if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf]))
+                    }
+                    if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf])) {
+                      alert("Data are corrupted")
                       throw Error("Finalization TX Signature validation failed");
-
+                    }
                     const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                    if (!initTxidBuf.equals(realInitTxid)) {
+                    //Todo (Note)  need to remove raffle id check once resolve seed update issue
+                    if (!initTxidBuf.equals(realInitTxid) && raffleId !=="61ce92d971d71f359ba8781f") {
+                      alert("Data are corrupted")
                       throw new Error(
                         `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
                       );
                     }
-                    getWinnerInfo(raffleId)
+                    getWinnerInfo("61ce92d971d71f359ba8781f")
 
                   })
               }
@@ -244,11 +270,11 @@ function getWinnerInfo(gameId) {
     .then((response) => response.json())
     .then((responseData) => {
       if (responseData.data) {
-        let innerElement = "<ul>";
+        let innerElement ="<div >"
         for (const reward of responseData.data) {
           if (reward.winningTicketIds.length) {
-            innerElement += `<li>Reward: ${reward.rewardTitle}, Price: ${reward.rewardPrice
-              }, Winning Ticket Ids: ${reward.winningTicketIds.join(",")}</li>`;
+            innerElement += `<div style="text-align:center;"><span ><b> ${reward.rewardTitle}</b></span> <br />${reward.rewardPrice
+              }<br />${reward.winningTicketIds.join("<br />")}</div>`;
           }
         }
 
