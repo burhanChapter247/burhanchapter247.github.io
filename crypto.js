@@ -9,5 +9,5 @@ class RNG {
   }
 }
 
-const p = new Rectangle(5, 5);
+const p = new RNG(5, 5);
 console.log("getValgetValgetValgetVal", p.getVal());
