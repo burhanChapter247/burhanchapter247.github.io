@@ -334,6 +334,8 @@ function getWinnerInfo1(seed, moreSeeds) {
     Buffer.from(seed.toString()),
     ...moreSeeds.map((s) => Buffer.from(s.toString())),
   ]));
+  console.log("currentSeed",currentSeed)
+  getNextUInt32()
   return currentSeed
 }
 
