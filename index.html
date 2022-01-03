@@ -1,57 +1,65 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Index page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- <link rel="stylesheet" type="text/css" media="screen" href="main.css" /> -->
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/bsv@2.0.10/dist/bsv.bundle.js"
+    ></script>
 
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Index page</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- <link rel="stylesheet" type="text/css" media="screen" href="main.css" /> -->
-  <script type="text/javascript" src="https://unpkg.com/bsv@2.0.10/dist/bsv.bundle.js"></script>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/BrowserFS/2.0.0/browserfs.min.js"
-    integrity="sha512-mz0EI+Ay1uIJP7rZEX8C/JlTAcHRIQ8Sny4vxmmj8MSzDJgG9NxxY2pUmOGv1lO7imFIFMyjjCzEXEywNgaUdQ=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script type="text/javascript">
-    // Installs globals onto window:
-    // * Buffer
-    // * require (monkey-patches if already defined)
-    // * process
-    // You can pass in an arbitrary object if you do not wish to pollute
-    // the global namespace.
-    BrowserFS.install(window);
-    // Configures BrowserFS to use the LocalStorage file system.
-    BrowserFS.configure(
-      {
-        fs: "LocalStorage",
-      },
-      function (e) {
-        if (e) {
-          // An error happened!
-          throw e;
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/BrowserFS/2.0.0/browserfs.min.js"
+      integrity="sha512-mz0EI+Ay1uIJP7rZEX8C/JlTAcHRIQ8Sny4vxmmj8MSzDJgG9NxxY2pUmOGv1lO7imFIFMyjjCzEXEywNgaUdQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script type="text/javascript">
+      // Installs globals onto window:
+      // * Buffer
+      // * require (monkey-patches if already defined)
+      // * process
+      // You can pass in an arbitrary object if you do not wish to pollute
+      // the global namespace.
+      BrowserFS.install(window);
+      // Configures BrowserFS to use the LocalStorage file system.
+      BrowserFS.configure(
+        {
+          fs: "LocalStorage",
+        },
+        function (e) {
+          if (e) {
+            // An error happened!
+            throw e;
+          }
+          // Otherwise, BrowserFS is ready-to-use!
         }
-        // Otherwise, BrowserFS is ready-to-use!
-      }
-    );
-  </script>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js" integrity="sha512-nOQuvD9nKirvxDdvQ9OMqe2dgapbPB7vYAMrzJihw5m+aNcf0dX53m6YxM4LgA9u8e9eg9QX+/+mPu8kCNpV2A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      );
+    </script>
 
-  <script src="main.js" defer></script>
-</head>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"
+      integrity="sha512-nOQuvD9nKirvxDdvQ9OMqe2dgapbPB7vYAMrzJihw5m+aNcf0dX53m6YxM4LgA9u8e9eg9QX+/+mPu8kCNpV2A=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
 
-<body>
-  <div style="text-align: center;">
-    <h3>Select Game</h3>
-    <select id="selectGame"></select>
-    <button onclick="handleValidate()">Validate</button>
-    <span id="loading"></span>
-    
-    <section id="winnerSec">
+    <script src="main.js" defer></script>
+  </head>
 
-      <span id="winnerInfo"> </span>
-    </section>
-  </div>
-</body>
+  <body>
+    <div style="text-align: center">
+      <h3>Select Game</h3>
+      <select id="selectGame"></select>
+      <button onclick="handleValidate()">Validate</button>
+      <span id="loading"></span>
 
+      <section id="winnerSec">
+        <span id="winnerInfo"> </span>
+      </section>
+    </div>
+  </body>
 </html>
