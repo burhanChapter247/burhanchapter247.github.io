@@ -192,10 +192,11 @@ function handleValidate() {
                                 `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
                               );
                             }
-                            getWinnerInfo(raffleId)
 
                           })
                       }
+                      getWinnerInfo(raffleId)
+
                     })
                 })
             }
