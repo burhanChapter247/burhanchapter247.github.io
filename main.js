@@ -158,7 +158,11 @@ function handleValidate() {
                             }
                           }
                           console.log("Finalization transaction has been valid")
+                      console.log(initObject,'initObject$$$$$$$$$$$$',endObject)
 
+                          getWinnerInfo1(initObject.initialSeed,
+                            ...endObject.additionalSeeds)
+                        })
                         })
                     })
                   fetch(`./static/txs/${raffleId}/ticketIds.txt`)
@@ -198,12 +202,9 @@ function handleValidate() {
 
                           })
                       }
-                      console.log(initObject,'initObject$$$$$$$$$$$$',endObject)
                       removeLoading()
                       getWinnerInfo(raffleId)
-                      getWinnerInfo1(initObject.initialSeed,
-                        ...endObject.additionalSeeds)
-                    })
+                     
                 })
             }
           })
