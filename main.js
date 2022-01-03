@@ -159,9 +159,8 @@ function handleValidate() {
                           }
                           console.log("Finalization transaction has been valid")
                       console.log(initObject,'initObject$$$$$$$$$$$$',endObject)
-
                           getWinnerInfo1(initObject.initialSeed,
-                            ...endObject.additionalSeeds)
+                            endObject.additionalSeeds)
                         })
                         })
                     })
@@ -322,6 +321,7 @@ function removeLoading() {
   loading.removeChild(loading.childNodes[0]);
 }
 function getWinnerInfo1(seed, moreSeeds) {
+  console.log(moreSeeds,'moreSeeds++++++++++')
   var crypto = window.CryptoJS;
 
   console.log(crypto.HmacSHA256("Message", "Secret Passphrase"), 'sha256')
