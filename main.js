@@ -198,6 +198,7 @@ function handleValidate() {
 
                           })
                       }
+                      console.log(initObject,'initObject$$$$$$$$$$$$',endObject)
                       removeLoading()
                       getWinnerInfo(raffleId)
                       getWinnerInfo1(initObject.initialSeed,
