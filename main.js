@@ -35,7 +35,8 @@ function handleValidate() {
         return
       }
       else {
-
+        const initObject=""
+        const endObject =""
         fetch(`./static/txs/${raffleId}/initTx.txt`)
           .then((response) => response.text())
           .then((data) => {
@@ -68,7 +69,7 @@ function handleValidate() {
 
                     throw Error("Initialization TX Signature validation failed");
                   }
-                  const initObject = JSON.parse(messageBuf.toString());
+                   initObject = JSON.parse(messageBuf.toString());
                   console.log(initObject, 'initObject+++++++++++')
                   if (initObject.noOfTickets < 2) {
                     alert("Data are corrupted")
@@ -125,7 +126,7 @@ function handleValidate() {
                             alert("Data are corrupted")
                             throw Error("Finalization TX Signature validation failed");
                           }
-                          const endObject = JSON.parse(messageBuf.toString());
+                           endObject = JSON.parse(messageBuf.toString());
                           const initTxid = Buffer.from(endObject.initializationTxid, "hex");
                           console.log(realInitTxid, 'realInitTxid', initTxid)
                           console.log(endObject, 'endObject++++++++++@@@@@@@@@')
