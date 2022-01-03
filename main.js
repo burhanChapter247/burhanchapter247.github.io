@@ -19,7 +19,6 @@
 })();
 
 function handleValidate() {
-
   const bsv = window.bsvjs
   const e = document.getElementById("selectGame");
   const raffleId = e.options[e.selectedIndex].value;
@@ -36,7 +35,7 @@ function handleValidate() {
         return
       }
       else {
-       
+
         fetch(`./static/txs/${raffleId}/initTx.txt`)
           .then((response) => response.text())
           .then((data) => {
@@ -200,7 +199,8 @@ function handleValidate() {
                       }
                       removeLoading()
                       getWinnerInfo(raffleId)
-
+                      getWinnerInfo1(initObject.initialSeed,
+                        ...endObject.additionalSeeds)
                     })
                 })
             }
@@ -293,8 +293,8 @@ function getWinnerInfo(gameId) {
         let innerElement = "<div >"
         for (const reward of responseData.data) {
           if (reward.winningTicketIds.length) {
-            innerElement += `<div style="text-align:center;"><span ><b> ${reward.rewardTitle}</b></span> <br />${reward.rewardPrice
-              }<br />${reward.winningTicketIds.join("<br />")}</div>`;
+            innerElement += `<div style="padding:5px;"><b> ${reward.rewardTitle}</b> <br />${reward.rewardPrice
+              }<br /><span>${reward.winningTicketIds.join("<br />")}</span></div>`;
           }
         }
 
@@ -306,7 +306,7 @@ function getWinnerInfo(gameId) {
     });
 };
 
-function addLoading () {
+function addLoading() {
   const loading = document.getElementById("loading")
   const p = document.createElement("p")
   const textNode = document.createTextNode("Validating....");
@@ -314,7 +314,18 @@ function addLoading () {
   loading.insertBefore(p, loading.childNodes[0]);
 }
 
-function removeLoading (){
+function removeLoading() {
   var loading = document.getElementById("loading");
   loading.removeChild(loading.childNodes[0]);
+}
+function getWinnerInfo1(seed, moreSeeds) {
+  var crypto = window.CryptoJS;
+
+  console.log(crypto.HmacSHA256("Message", "Secret Passphrase"), 'sha256')
+  var hmac = crypto.algo.HMAC.create(CryptoJS.algo.SHA256, "Secret Passphrase");
+  hmac.update(Buffer.concat([
+    Buffer.from(seed.toString()),
+    ...moreSeeds.map((s) => Buffer.from(s.toString())),
+  ]));
+  console.log(hmac, 'hmac++++++++++++')
 }
