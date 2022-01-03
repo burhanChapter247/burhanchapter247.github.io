@@ -19,7 +19,6 @@
 })();
 
 function handleValidate() {
-
   const bsv = window.bsvjs
   const e = document.getElementById("selectGame");
   const raffleId = e.options[e.selectedIndex].value;
@@ -27,6 +26,7 @@ function handleValidate() {
   const pubKey = bsv.PubKey.fromPrivKey(
     bsv.PrivKey.Testnet.fromString("cUdxDDDbfCsvFqZeVPaNmAzE3MkNBqB6oBfp9xfuPzyfFMFvWQnf")
   );
+
   fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
     .then((response) => {
       console.log(response, 'response', response.ok)
@@ -102,7 +102,7 @@ function handleValidate() {
                     alert("Data are corrupted")
                     throw new Error("Game must contain valid additional seeds")
                   }
-                  alert("Initialization transaction has been valid")
+                  console.log("Initialization transaction has been valid")
                   fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
                     .then((response) => response.text())
                     .then((data) => {
@@ -154,7 +154,7 @@ function handleValidate() {
                               throw new Error("Invalid seeds");
                             }
                           }
-                          alert("Finalization transaction has been valid")
+                          console.log("Finalization transaction has been valid")
 
                         })
                     })
@@ -186,7 +186,7 @@ function handleValidate() {
                             }
                             const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
                             //TODO: need to remove raffle id check once seed update issue will resolve
-                            if (!initTxidBuf.equals(realInitTxid) ) {
+                            if (!initTxidBuf.equals(realInitTxid)) {
                               alert("Data are corrupted")
                               throw new Error(
                                 `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
@@ -273,6 +273,12 @@ function stringToRegex(str) {
 }
 
 function getWinnerInfo(gameId) {
+  const sectionId = document.getElementById("winnerSec")
+  const h3 = document.createElement("h3")
+  const textNode = document.createTextNode("Winners");
+  h3.appendChild(textNode);
+  sectionId.insertBefore(h3, sectionId.childNodes[0]);
+  console.log(sectionId, 'sectionId+++++++')
   const winnerInfoElement = document.getElementById("winnerInfo");
   winnerInfoElement.innerHTML = "<p>Loading........</p>";
   fetch(`https://ugoflip.herokuapp.com/v1/raffle/${gameId}/reward-info`)
