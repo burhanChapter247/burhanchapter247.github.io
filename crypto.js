@@ -1,9 +1,13 @@
-var message = "café";
-var key = "something";
+class RNG {
+  constructor(height, width) {
+    this.height = height;
+    this.width = width;
+  }
 
-var encrypted = CryptoJS.AES.encrypt(message, key);
-//equivalent to CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(message), key);
-var decrypted = CryptoJS.AES.decrypt(encrypted, key);
+  getVal() {
+    return this.height + this.width;
+  }
+}
 
-$("#1").text("Encrypted: " + encrypted);
-$("#2").text("Decrypted: " + decrypted.toString(CryptoJS.enc.Utf8));
+const p = new RNG(5, 5);
+console.log("getValgetValgetValgetVal", p.getVal());
