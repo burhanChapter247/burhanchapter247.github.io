@@ -35,8 +35,8 @@ function handleValidate() {
         return
       }
       else {
-        const initObject=""
-        const endObject =""
+        let initObject=""
+        let endObject =""
         fetch(`./static/txs/${raffleId}/initTx.txt`)
           .then((response) => response.text())
           .then((data) => {
