@@ -330,7 +330,7 @@ function getWinnerInfo1(seed, moreSeeds) {
 
   console.log(crypto.HmacSHA256("Message", "Secret Passphrase"), 'sha256')
    currentSeed = crypto.algo.HMAC.create(CryptoJS.algo.SHA256, "Secret Passphrase");
-  hmac.update(Buffer.concat([
+   currentSeed.update(Buffer.concat([
     Buffer.from(seed.toString()),
     ...moreSeeds.map((s) => Buffer.from(s.toString())),
   ]));
