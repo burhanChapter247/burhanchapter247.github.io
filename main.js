@@ -19,6 +19,7 @@
 })();
 
 function handleValidate() {
+
   const bsv = window.bsvjs
   const e = document.getElementById("selectGame");
   const raffleId = e.options[e.selectedIndex].value;
@@ -35,11 +36,13 @@ function handleValidate() {
         return
       }
       else {
+       
         fetch(`./static/txs/${raffleId}/initTx.txt`)
           .then((response) => response.text())
           .then((data) => {
             const initializeTxId = data.split(/\n/)[0]
             if (initializeTxId) {
+              addLoading()
               fetch(`${S3BucketBaseUrl}/${initializeTxId}.btx`)
                 .then((response) => response.arrayBuffer())
                 .then((transactionData) => {
@@ -195,6 +198,7 @@ function handleValidate() {
 
                           })
                       }
+                      removeLoading()
                       getWinnerInfo(raffleId)
 
                     })
@@ -301,3 +305,16 @@ function getWinnerInfo(gameId) {
       }
     });
 };
+
+function addLoading () {
+  const loading = document.getElementById("loading")
+  const p = document.createElement("p")
+  const textNode = document.createTextNode("Validating....");
+  p.appendChild(textNode);
+  loading.insertBefore(p, loading.childNodes[0]);
+}
+
+function removeLoading (){
+  var loading = document.getElementById("loading");
+  loading.removeChild(loading.childNodes[0]);
+}
