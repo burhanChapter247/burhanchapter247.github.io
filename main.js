@@ -433,10 +433,10 @@ class RNG {
   getNextUInt32(o) {
     console.log(o, 'getNextUInt32')
     if (o) {
-      return getNextUInt32Between(o);
+      return this.getNextUInt32Between(o);
     }
 
-    const sha256Hash = getNext();
+    const sha256Hash = this.getNext();
     console.log(sha256Hash, "sha256HashgetNextUInt32")
     const numbers = int32OffsetsIn256Bits.map((offset) =>
       sha256Hash.readUInt32BE(offset)
@@ -463,7 +463,7 @@ class RNG {
       );
 
     const diff = o.max - o.min;
-    const int = getNextUInt32();
+    const int = this.getNextUInt32();
     console.log(int, 'intintintintintintintintintintint')
     const m = int % diff;
     const result = o.min + m;
