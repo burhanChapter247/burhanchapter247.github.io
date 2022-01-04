@@ -50,7 +50,7 @@ async function handleValidate() {
               addLoading()
               fetch(`${S3BucketBaseUrl}/${initializeTxId}.btx`)
                 .then((response) => response.arrayBuffer())
-                .then((transactionData) => {
+                .then(async(transactionData) => {
                   const {
                     messageType,
                     signature,
