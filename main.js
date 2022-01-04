@@ -201,8 +201,9 @@ async function handleValidate() {
                         })
                     })
                   const response = await fetch(`./static/txs/${raffleId}/ticketIds.txt`)
+                  console.log(response,'response++++++++')
                   const data = response.text()
-
+                  console.log(data,'data++++++++++++')
                   const ticketIds = data.split(/\n/).filter(Boolean)
                   if (ticketIds.length !== initObject.noOfTickets) {
                     console.log("Ticket count does not match")
@@ -215,7 +216,9 @@ async function handleValidate() {
                   while (ticketIdsArray.length < ticketIds.length) {
                     console.log(ticketIds[count], 'ticketIds[count]', count)
                     const transactionResponse = await fetch(`${S3BucketBaseUrl}/${ticketIds[count]}.btx`)
+                    console.log(transactionResponse,'transactionResponse')
                     const transactionData = transactionResponse.arrayBuffer()
+                    console.log(transactionData,'arrayBuffer')
                     const {
                       messageType,
                       signature,
