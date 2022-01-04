@@ -1,3 +1,7 @@
+const crypto = window.CryptoJS;
+let currentSeed = ""
+const int32OffsetsIn256Bits = [0, 4, 8, 12, 16, 20, 24, 28];
+const int32MaxValue = 0b01111111111111111111111111111111; // equals 2147483647
 (function () {
 
   const selectRaffle = document.getElementById("selectGame");
@@ -35,8 +39,8 @@ function handleValidate() {
         return
       }
       else {
-        let initObject=""
-        let endObject =""
+        let initObject = ""
+        let endObject = ""
         fetch(`./static/txs/${raffleId}/initTx.txt`)
           .then((response) => response.text())
           .then((data) => {
@@ -69,7 +73,7 @@ function handleValidate() {
 
                     throw Error("Initialization TX Signature validation failed");
                   }
-                   initObject = JSON.parse(messageBuf.toString());
+                  initObject = JSON.parse(messageBuf.toString());
                   console.log(initObject, 'initObject+++++++++++')
                   if (initObject.noOfTickets < 2) {
                     alert("Data are corrupted")
@@ -126,7 +130,7 @@ function handleValidate() {
                             alert("Data are corrupted")
                             throw Error("Finalization TX Signature validation failed");
                           }
-                           endObject = JSON.parse(messageBuf.toString());
+                          endObject = JSON.parse(messageBuf.toString());
                           const initTxid = Buffer.from(endObject.initializationTxid, "hex");
                           console.log(realInitTxid, 'realInitTxid', initTxid)
                           console.log(endObject, 'endObject++++++++++@@@@@@@@@')
@@ -158,52 +162,55 @@ function handleValidate() {
                             }
                           }
                           console.log("Finalization transaction has been valid")
-                      console.log(initObject,'initObject$$$$$$$$$$$$',endObject)
-                          getWinnerInfo1(initObject.initialSeed,
-                            endObject.additionalSeeds)
-                        })
+                          console.log(initObject, 'initObject$$$$$$$$$$$$', endObject)
+                          const rng = new RNG(
+                            initObject.initialSeed,
+                            ...endObject.additionalSeeds
+                          );
+                          console.log(rng,'rng+++++++++++')
                         })
                     })
-                  fetch(`./static/txs/${raffleId}/ticketIds.txt`)
-                    .then((response) => response.text())
-                    .then((data) => {
-                      const ticketIds = data.split(/\n/).filter(Boolean)
-                      if (ticketIds.length !== initObject.noOfTickets) {
-                        throw new Error("Ticket count does not match")
-                      }
-                      for (ticketId of ticketIds) {
-                        fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
-                          .then((response) => response.arrayBuffer())
-                          .then((transactionData) => {
-                            const {
-                              messageType,
-                              signature,
-                              messageParts: [initTxidBuf, ticketIdBuf],
-                            } = parseTransaction(transactionData, 2)
-                            console.log(messageType, 'messageType++++++++', signature)
-                            console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
-                            if (messageType !== 1) {
-                              alert("Data are corrupted")
-                              throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
-                            }
-                            if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf])) {
-                              alert("Data are corrupted")
-                              throw Error("Finalization TX Signature validation failed");
-                            }
-                            const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                            //TODO: need to remove raffle id check once seed update issue will resolve
-                            if (!initTxidBuf.equals(realInitTxid)) {
-                              alert("Data are corrupted")
-                              throw new Error(
-                                `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
-                              );
-                            }
+                })
+              fetch(`./static/txs/${raffleId}/ticketIds.txt`)
+                .then((response) => response.text())
+                .then((data) => {
+                  const ticketIds = data.split(/\n/).filter(Boolean)
+                  if (ticketIds.length !== initObject.noOfTickets) {
+                    throw new Error("Ticket count does not match")
+                  }
+                  for (ticketId of ticketIds) {
+                    fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
+                      .then((response) => response.arrayBuffer())
+                      .then((transactionData) => {
+                        const {
+                          messageType,
+                          signature,
+                          messageParts: [initTxidBuf, ticketIdBuf],
+                        } = parseTransaction(transactionData, 2)
+                        console.log(messageType, 'messageType++++++++', signature)
+                        console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
+                        if (messageType !== 1) {
+                          alert("Data are corrupted")
+                          throw Error("Finalization TX message type must be RAFFLE_TICKET_SALE");
+                        }
+                        if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf])) {
+                          alert("Data are corrupted")
+                          throw Error("Finalization TX Signature validation failed");
+                        }
+                        const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
+                        //TODO: need to remove raffle id check once seed update issue will resolve
+                        if (!initTxidBuf.equals(realInitTxid)) {
+                          alert("Data are corrupted")
+                          throw new Error(
+                            `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
+                          );
+                        }
 
-                          })
-                      }
-                      removeLoading()
-                      getWinnerInfo(raffleId)
-                     
+                      })
+                  }
+                  removeLoading()
+                  getWinnerInfo(raffleId)
+
                 })
             }
           })
@@ -321,14 +328,65 @@ function removeLoading() {
   loading.removeChild(loading.childNodes[0]);
 }
 function getWinnerInfo1(seed, moreSeeds) {
-  console.log(moreSeeds,'moreSeeds++++++++++')
-  var crypto = window.CryptoJS;
+  console.log(moreSeeds, 'moreSeeds++++++++++')
+
 
   console.log(crypto.HmacSHA256("Message", "Secret Passphrase"), 'sha256')
-  var hmac = crypto.algo.HMAC.create(CryptoJS.algo.SHA256, "Secret Passphrase");
-  hmac.update(Buffer.concat([
+  currentSeed = crypto.algo.HMAC.create(CryptoJS.algo.SHA256, "Secret Passphrase");
+  currentSeed.update(Buffer.concat([
     Buffer.from(seed.toString()),
     ...moreSeeds.map((s) => Buffer.from(s.toString())),
   ]));
-  console.log(hmac, 'hmac++++++++++++')
+  console.log("currentSeed", currentSeed)
+  getNextUInt32()
+  return currentSeed
+}
+
+function getNext() {
+  console.log(currentSeed, 'getNext+++++++++++')
+  currentSeed = crypto
+    .algo.HMAC.create(CryptoJS.algo.SHA256, "Secret Passphrase")
+    .update(currentSeed)
+  return currentSeed;
+}
+
+function getNextUInt32(o) {
+  console.log(o, 'getNextUInt32')
+  if (o) {
+    return getNextUInt32Between(o);
+  }
+
+  const sha256Hash = getNext();
+  console.log(sha256Hash, "sha256HashgetNextUInt32")
+  const numbers = int32OffsetsIn256Bits.map((offset) =>
+    sha256Hash.readUInt32BE(offset)
+  );
+  let result = numbers[0];
+  console.log(result, 'result+++++++++++++')
+  for (let i = 1; i < numbers.length; i++) result = result ^ numbers[i];
+  result = result & int32MaxValue; // this will remove the sign from the result (-42 becomes 42)
+  console.log("getNextUInt32result", result)
+  return result;
+}
+
+function getNextUInt32Between(o) {
+  console.log(o, 'getNextUInt32BetweengetNextUInt32Between')
+  if (!o) throw new Error("no integer limits provided");
+  if (!o.max) throw new Error("no integer max limit provided");
+  if (!o.min) o.min = 0;
+  o.min = Math.floor(o.min);
+  o.max = Math.floor(o.max);
+  if (o.min < 0) throw new Error(`min limit cannot be smaller than 0`);
+  if (o.min >= o.max)
+    throw new Error(
+      `max limit (${o.max}) must be greater than min limit (${o.min})`
+    );
+
+  const diff = o.max - o.min;
+  const int = getNextUInt32();
+  console.log(int, 'intintintintintintintintintintint')
+  const m = int % diff;
+  const result = o.min + m;
+  console.log(result, 'result++++++++++getNextUInt32Between')
+  return result;
 }
