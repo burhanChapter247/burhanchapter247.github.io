@@ -23,7 +23,7 @@ const int32MaxValue = 0b01111111111111111111111111111111; // equals 2147483647
 
 })();
 
-function handleValidate() {
+async function handleValidate() {
 
   const bsv = window.bsvjs
   const e = document.getElementById("selectGame");
@@ -200,96 +200,91 @@ function handleValidate() {
                           console.log("Finalization transaction has been valid")
                         })
                     })
-                  fetch(`./static/txs/${raffleId}/ticketIds.txt`)
-                    .then((response) => response.text())
-                    .then((data) => {
-                      const ticketIds = data.split(/\n/).filter(Boolean)
-                      if (ticketIds.length !== initObject.noOfTickets) {
-                        console.log("Ticket count does not match")
-                        removeLoading()
-                        return
-                      }
-                      const ticketIdsArray = []
-                      let count =0
-                      while (ticketIdsArray.length < ticketIds.length) {
-                        console.log(ticketIds[count],'ticketIds[count]',count)
-                        fetch(`${S3BucketBaseUrl}/${ticketIds[count]}.btx`)
-                          .then((response) => response.arrayBuffer())
-                          .then((transactionData) => {
-                            const {
-                              messageType,
-                              signature,
-                              messageParts: [initTxidBuf, ticketIdBuf],
-                            } = parseTransaction(transactionData, 2)
-                            console.log(messageType, 'messageType++++++++', signature)
-                            console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
-                            if (messageType !== 1) {
-                              alert("Data are corrupted")
-                              console.log("Finalization TX message type must be RAFFLE_TICKET_SALE");
-                              removeLoading()
+                  const response = await fetch(`./static/txs/${raffleId}/ticketIds.txt`)
+                  const data = response.text()
 
-                              return
-
-                            }
-                            if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf])) {
-                              alert("Data are corrupted")
-                              console.log("Finalization TX Signature validation failed");
-                              removeLoading()
-                              return
-
-                            }
-                            const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                            console.log(ticketId, 'ticketId++++++++++++++', ticketIdBuf)
-                            //TODO: need to remove raffle id check once seed update issue will resolve
-                            if (!initTxidBuf.equals(realInitTxid)) {
-                              alert("Data are corrupted")
-                              console.log(
-                                `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
-                              );
-                              removeLoading()
-                              return
-                            }
-                            for (let i = 0; i < ticketIdsArray.length; i++) {
-                              if (ticketIdsArray[i] === ticketId) {
-                                throw new Error(
-                                  `Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
-                                );
-                              }
-                            }
-                            ticketIdsArray.push(ticketId);
-
-                            console.log(ticketIdsArray, 'ticketIds+++++++')
-                          })
-                          count++
-                      }
-                      console.log(endObject, "additionalSeeds", endObject.additionalSeeds, 'endObject+++++++++@@@@@@', initObject)
-                      console.log(ticketIdsArray.length, 'ticketIdsArray', initObject.noOfTickets)
-                      if (ticketIdsArray.length !== initObject.noOfTickets) {
-                        throw Error("Ticket count does not match with expected count.");
-                      }
-                      const rng = new RNG(
-                        initObject.initialSeed,
-                        ...endObject.additionalSeeds
-                      );
-                      const sortedRewards = initObject.rewards.sort((a, b) => a.rank - b.rank); // from lowest rank to highest
-                      console.log(sortedRewards, 'sortedRewards++++++',ticketIdsArray,ticketIdsArray.length)
-                      const processedRewards = [];
-
-                      for (const reward of sortedRewards) {
-                        const winningTicketIds = [];
-                        for (let i = 0; i < reward.rewardCount; i++) {
-                          winningTicketIds.push(
-                            ticketIdsArray[rng.getNextUInt32({ max: ticketIdsArray.length })]
-                          );
-                        }
-                        console.log(winningTicketIds, 'winningTicketIds+++++++')
-                        processedRewards.push({ reward, winningTicketIds });
-                      }
-
+                  const ticketIds = data.split(/\n/).filter(Boolean)
+                  if (ticketIds.length !== initObject.noOfTickets) {
+                    console.log("Ticket count does not match")
+                    removeLoading()
+                    return
+                  }
+                  const ticketIdsArray = []
+                  let count = 0
+                  console.log(ticketIdsArray, 'ticketIdsArray', ticketIds)
+                  while (ticketIdsArray.length < ticketIds.length) {
+                    console.log(ticketIds[count], 'ticketIds[count]', count)
+                    const transactionResponse = await fetch(`${S3BucketBaseUrl}/${ticketIds[count]}.btx`)
+                    const transactionData = transactionResponse.arrayBuffer()
+                    const {
+                      messageType,
+                      signature,
+                      messageParts: [initTxidBuf, ticketIdBuf],
+                    } = parseTransaction(transactionData, 2)
+                    console.log(messageType, 'messageType++++++++', signature)
+                    console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
+                    if (messageType !== 1) {
+                      alert("Data are corrupted")
+                      console.log("Finalization TX message type must be RAFFLE_TICKET_SALE");
                       removeLoading()
-                      showWinnerInfo(processedRewards)
 
-                    })
+                      return
+
+                    }
+                    if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf])) {
+                      alert("Data are corrupted")
+                      console.log("Finalization TX Signature validation failed");
+                      removeLoading()
+                      return
+
+                    }
+                    const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
+                    console.log(ticketId, 'ticketId++++++++++++++', ticketIdBuf)
+                    //TODO: need to remove raffle id check once seed update issue will resolve
+                    if (!initTxidBuf.equals(realInitTxid)) {
+                      alert("Data are corrupted")
+                      console.log(
+                        `Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
+                      );
+                      removeLoading()
+                      return
+                    }
+                    for (let i = 0; i < ticketIdsArray.length; i++) {
+                      if (ticketIdsArray[i] === ticketId) {
+                        throw new Error(
+                          `Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
+                        );
+                      }
+                    }
+                    ticketIdsArray.push(ticketId);
+                    console.log(ticketIdsArray, 'ticketIds+++++++')
+                    count++
+                  }
+                  console.log(endObject, "additionalSeeds", endObject.additionalSeeds, 'endObject+++++++++@@@@@@', initObject)
+                  console.log(ticketIdsArray.length, 'ticketIdsArray', initObject.noOfTickets)
+                  if (ticketIdsArray.length !== initObject.noOfTickets) {
+                    throw Error("Ticket count does not match with expected count.");
+                  }
+                  const rng = new RNG(
+                    initObject.initialSeed,
+                    ...endObject.additionalSeeds
+                  );
+                  const sortedRewards = initObject.rewards.sort((a, b) => a.rank - b.rank); // from lowest rank to highest
+                  console.log(sortedRewards, 'sortedRewards++++++', ticketIdsArray, ticketIdsArray.length)
+                  const processedRewards = [];
+
+                  for (const reward of sortedRewards) {
+                    const winningTicketIds = [];
+                    for (let i = 0; i < reward.rewardCount; i++) {
+                      winningTicketIds.push(
+                        ticketIdsArray[rng.getNextUInt32({ max: ticketIdsArray.length })]
+                      );
+                    }
+                    console.log(winningTicketIds, 'winningTicketIds+++++++')
+                    processedRewards.push({ reward, winningTicketIds });
+                  }
+                  removeLoading()
+                  showWinnerInfo(processedRewards)
                 })
             }
           })
