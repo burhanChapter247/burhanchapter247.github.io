@@ -237,7 +237,7 @@ function handleValidate() {
 
                             }
                             const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                            console.log(ticketId,'ticketId++++++++++++++',ticketIdBuf)
+                            console.log(ticketId, 'ticketId++++++++++++++', ticketIdBuf)
                             //TODO: need to remove raffle id check once seed update issue will resolve
                             if (!initTxidBuf.equals(realInitTxid)) {
                               alert("Data are corrupted")
@@ -372,7 +372,7 @@ function stringToRegex(str) {
 }
 
 function showWinnerInfo(winnerInfo) {
-  console.log(winnerInfo,'winnerInfo+++++++')
+  console.log(winnerInfo, 'winnerInfo+++++++')
   const sectionId = document.getElementById("winnerSec")
   const h3 = document.createElement("h3")
   const textNode = document.createTextNode("Winners");
@@ -380,10 +380,10 @@ function showWinnerInfo(winnerInfo) {
   sectionId.insertBefore(h3, sectionId.childNodes[0]);
   const winnerInfoElement = document.getElementById("winnerInfo");
   winnerInfoElement.innerHTML = "<p>Loading........</p>";
-  if (responseData.data) {
+  if (winnerInfo && winnerInfo.length) {
     let innerElement = "<div >"
     for (const reward of winnerInfo) {
-      console.log(reward,'reward+++++++++')
+      console.log(reward, 'reward+++++++++')
       if (reward.winningTicketIds.length) {
         innerElement += `<div style="text-align:center;"><span ><b> ${reward.rewardTitle}</b></span> <br />${reward.rewardPrice
           }<br />${reward.winningTicketIds.join("<br />")}</div>`;
@@ -414,61 +414,55 @@ function removeLoading() {
 
 class RNG {
   constructor(seed, ...moreSeeds) {
-    console.log(seed, 'seddddddddddddddddddddddd', moreSeeds)
     this.currentSeed = bsv.Hash.sha256(
       Buffer.concat([
         Buffer.from(seed.toString()),
         ...moreSeeds.map((s) => Buffer.from(s.toString())),
       ])
     );
-    console.log(this.currentSeed, 'this.currentSeed+++++++++++constructor')
   }
 
   getNext() {
     this.currentSeed = bsv.Hash.sha256(this.currentSeed)
-    console.log(this.currentSeed, 'this.currentSeedgetNext')
     return this.currentSeed;
   }
 
   getNextUInt32(o) {
-    console.log(o, 'getNextUInt32')
     if (o) {
       return this.getNextUInt32Between(o);
     }
-
     const sha256Hash = this.getNext();
-    console.log(sha256Hash, "sha256HashgetNextUInt32", int32OffsetsIn256Bits)
     const numbers = int32OffsetsIn256Bits.map((offset) =>
       sha256Hash.readUInt32BE(offset)
     );
-    console.log(numbers, 'numbers+++++++++++++++++')
     let result = numbers[0];
-    console.log(result, 'result+++++++++++++')
     for (let i = 1; i < numbers.length; i++) result = result ^ numbers[i];
     result = result & int32MaxValue; // this will remove the sign from the result (-42 becomes 42)
-    console.log("getNextUInt32result", result)
     return result;
   }
 
   getNextUInt32Between(o) {
-    console.log(o, 'getNextUInt32BetweengetNextUInt32Between')
-    if (!o) throw new Error("no integer limits provided");
-    if (!o.max) throw new Error("no integer max limit provided");
+    if (!o) {
+      throw new Error("no integer limits provided");
+    }
+    if (!o.max) {
+      throw new Error("no integer max limit provided");
+    }
     if (!o.min) o.min = 0;
     o.min = Math.floor(o.min);
     o.max = Math.floor(o.max);
-    if (o.min < 0) throw new Error(`min limit cannot be smaller than 0`);
-    if (o.min >= o.max)
+    if (o.min < 0) {
+      throw new Error(`min limit cannot be smaller than 0`);
+    }
+    if (o.min >= o.max) {
       throw new Error(
         `max limit (${o.max}) must be greater than min limit (${o.min})`
       );
-
+    }
     const diff = o.max - o.min;
     const int = this.getNextUInt32();
-    console.log(int, 'intintintintintintintintintintint')
     const m = int % diff;
     const result = o.min + m;
-    console.log(result, 'result++++++++++getNextUInt32Between')
     return result;
   }
 }
