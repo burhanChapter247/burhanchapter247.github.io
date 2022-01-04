@@ -1,4 +1,5 @@
 const crypto = window.CryptoJS;
+const bsv = window.bsvjs
 let currentSeed = ""
 const int32OffsetsIn256Bits = [0, 4, 8, 12, 16, 20, 24, 28];
 const int32MaxValue = 0b01111111111111111111111111111111; // equals 2147483647
@@ -298,7 +299,6 @@ function handleValidate() {
 }
 
 function parseTransaction(transactionData, expectedMessageParts) {
-  const bsv = window.bsvjs
 
   const buf = Buffer.alloc(transactionData.byteLength);
   const view = new Uint8Array(transactionData);
@@ -415,23 +415,18 @@ function removeLoading() {
 class RNG {
   constructor(seed, ...moreSeeds) {
     console.log(seed, 'seddddddddddddddddddddddd', moreSeeds)
-    this.currentSeed = crypto.algo.SHA256.create();
-    this.currentSeed.update(Buffer.concat([
-      Buffer.from(seed.toString()),
-      ...moreSeeds.map((s) => Buffer.from(s.toString())),
-    ]));
-    this.currentSeed.finalize()
-    this.currentSeed =Buffer.from(this.currentSeed.toString(crypto.enc.Hex))
+    this.currentSeed = bsv.Hash.sha256(
+      Buffer.concat([
+        Buffer.from(seed.toString()),
+        ...moreSeeds.map((s) => Buffer.from(s.toString())),
+      ])
+    );
     console.log(this.currentSeed,'this.currentSeed+++++++++++constructor')
   }
 
   getNext() {
-    console.log(currentSeed, 'getNext+++++++++++')
-    this.currentSeed = crypto.algo.SHA256.create()
-      .update(this.currentSeed)
-      console.log(this.currentSeed,'this.currentSeed+++++++++++++++getNext')
-      this.currentSeed.finalize()
-      this.currentSeed =Buffer.from(this.currentSeed.toString(crypto.enc.Hex))
+    this.currentSeed = bsv.Hash.sha256(this.currentSeed)
+    console.log(this.currentSeed,'this.currentSeedgetNext')
     return this.currentSeed;
   }
 
