@@ -255,6 +255,7 @@ function handleValidate() {
                               }
                             }
                             ticketIdsArray.push(ticketId);
+                            console.log(ticketIdsArray.length, 'ticketIdsArray', initObject.noOfTickets)
                             if (ticketIdsArray.length !== initObject.noOfTickets) {
                               throw Error("Ticket count does not match with expected count.");
                             }
@@ -274,7 +275,7 @@ function handleValidate() {
                         const winningTicketIds = [];
                         for (let i = 0; i < reward.rewardCount; i++) {
                           winningTicketIds.push(
-                            ticketIds[rng.getNextUInt32({ max: ticketIds.length })]
+                            ticketIdsArray[rng.getNextUInt32({ max: ticketIdsArray.length })]
                           );
                         }
                         console.log(winningTicketIds, 'winningTicketIds+++++++')
@@ -371,7 +372,7 @@ function stringToRegex(str) {
   return new RegExp(main, options)
 }
 
-function showWinnerInfo(winnerInfo) {
+function showWinnerInfo(winnerInfoList) {
   console.log(winnerInfo, 'winnerInfo+++++++')
   const sectionId = document.getElementById("winnerSec")
   const h3 = document.createElement("h3")
@@ -382,11 +383,10 @@ function showWinnerInfo(winnerInfo) {
   winnerInfoElement.innerHTML = "<p>Loading........</p>";
   if (winnerInfo && winnerInfo.length) {
     let innerElement = "<div >"
-    for (const reward of winnerInfo) {
-      console.log(reward, 'reward+++++++++')
-      if (reward.winningTicketIds.length) {
-        innerElement += `<div style="text-align:center;"><span ><b> ${reward.rewardTitle}</b></span> <br />${reward.rewardPrice
-          }<br />${reward.winningTicketIds.join("<br />")}</div>`;
+    for (const winnerInfo of winnerInfoList) {
+      if (winnerInfo.winningTicketIds.length) {
+        innerElement += `<div style="text-align:center;"><span ><b> ${winnerInfo.reward.rewardTitle}</b></span> <br />${winnerInfo.reward.rewardPrice
+          }<br />${winnerInfo.winningTicketIds.join("<br />")}</div>`;
       }
     }
 
