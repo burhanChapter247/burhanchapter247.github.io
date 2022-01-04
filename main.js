@@ -259,10 +259,10 @@ function handleValidate() {
                             console.log(ticketIdsArray, 'ticketIds+++++++')
                           })
                       }
-                      console.log(endObject, 'endObject+++++++++@@@@@@', initObject)
+                      console.log(endObject,"additionalSeeds", endObject.additionalSeeds,'endObject+++++++++@@@@@@', initObject)
                       const rng = new RNG(
                         initObject.initialSeed,
-                        ...endObject.additionalSeeds
+                        endObject.additionalSeeds
                       );
                       const sortedRewards = initObject.rewards.sort((a, b) => a.rank - b.rank); // from lowest rank to highest
                       console.log(sortedRewards, 'sortedRewards++++++')
@@ -413,12 +413,12 @@ function removeLoading() {
 
 
 class RNG {
-  constructor(seed, ...moreSeeds) {
+  constructor(seed, moreSeeds) {
     console.log(seed, 'seddddddddddddddddddddddd', moreSeeds)
     this.currentSeed = crypto.algo.HMAC.create(CryptoJS.algo.SHA256, "Secret Passphrase");
     this.currentSeed.update(Buffer.concat([
       Buffer.from(seed.toString()),
-      ...moreSeeds.map((s) => Buffer.from(s.toString())),
+      moreSeeds.map((s) => Buffer.from(s.toString())),
     ]));
   }
 
