@@ -211,7 +211,7 @@ function handleValidate() {
                       }
                       const ticketIdsArray = []
                       let count =0
-                      while (ticketIds.length !==ticketIdsArray.length) {
+                      while (ticketIdsArray.length < ticketIds.length) {
                         console.log(ticketIds[count],'ticketIds[count]',count)
                         fetch(`${S3BucketBaseUrl}/${ticketIds[count]}.btx`)
                           .then((response) => response.arrayBuffer())
