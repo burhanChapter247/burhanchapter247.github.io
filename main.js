@@ -255,20 +255,21 @@ function handleValidate() {
                               }
                             }
                             ticketIdsArray.push(ticketId);
-                            console.log(ticketIdsArray.length, 'ticketIdsArray', initObject.noOfTickets)
-                            if (ticketIdsArray.length !== initObject.noOfTickets) {
-                              throw Error("Ticket count does not match with expected count.");
-                            }
+
                             console.log(ticketIdsArray, 'ticketIds+++++++')
                           })
                       }
                       console.log(endObject, "additionalSeeds", endObject.additionalSeeds, 'endObject+++++++++@@@@@@', initObject)
+                      console.log(ticketIdsArray.length, 'ticketIdsArray', initObject.noOfTickets)
+                      if (ticketIdsArray.length !== initObject.noOfTickets) {
+                        throw Error("Ticket count does not match with expected count.");
+                      }
                       const rng = new RNG(
                         initObject.initialSeed,
                         ...endObject.additionalSeeds
                       );
                       const sortedRewards = initObject.rewards.sort((a, b) => a.rank - b.rank); // from lowest rank to highest
-                      console.log(sortedRewards, 'sortedRewards++++++')
+                      console.log(sortedRewards, 'sortedRewards++++++',ticketIdsArray,ticketIdsArray.length)
                       const processedRewards = [];
 
                       for (const reward of sortedRewards) {
