@@ -246,27 +246,27 @@ function handleValidate() {
                             }
                           })
                       }
-                      console.log(endObject, 'endObject+++++++++', initObject)
-                      const ticketIds = []
-                      for (let i = 0; i < ticketIds.length; i++) {
-                        if (ticketIds[i] === ticketId) {
+                      console.log(endObject, 'endObject+++++++++@@@@@@', initObject)
+                      const ticketIdsArray = []
+                      for (let i = 0; i < ticketIdsArray.length; i++) {
+                        if (ticketIdsArray[i] === ticketId) {
                           throw new Error(
                             `Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
                           );
                         }
                       }
 
-                      ticketIds.push(ticketId);
+                      ticketIdsArray.push(ticketId);
 
-                      if (ticketIds.length > initObject.noOfTickets) {
+                      if (ticketIdsArray.length > initObject.noOfTickets) {
                         break;
                       }
                       nextTicketTx = await loadNextTicketSaleTransaction();
 
-                      if (ticketIds.length !== initObject.noOfTickets) {
+                      if (ticketIdsArray.length !== initObject.noOfTickets) {
                         throw Error("Ticket count does not match with expected count.");
                       }
-                      console.log(ticketIds, 'ticketIds+++++++')
+                      console.log(ticketIdsArray, 'ticketIds+++++++')
                       const rng = new RNG(
                         initObject.initialSeed,
                         ...endObject.additionalSeeds
