@@ -197,26 +197,6 @@ function handleValidate() {
                             }
                           }
                           console.log("Finalization transaction has been valid")
-
-                          const rng = new RNG(
-                            initObject.initialSeed,
-                            ...endObject.additionalSeeds
-                          );
-                          const sortedRewards = initObject.rewards.sort((a, b) => a.rank - b.rank); // from lowest rank to highest
-                          console.log(sortedRewards,'sortedRewards++++++')
-                          const processedRewards = [];
-
-                          for (const reward of sortedRewards) {
-                            const winningTicketIds = [];
-                            for (let i = 0; i < reward.rewardCount; i++) {
-                              winningTicketIds.push(
-                                ticketIds[rng.getNextUInt32({ max: ticketIds.length })]
-                              );
-                            }
-                            console.log(winningTicketIds,'winningTicketIds+++++++')
-                            processedRewards.push({ reward, winningTicketIds });
-                          }
-                          console.log(processedRewards,'processedRewards+++++++++++++')
                         })
                     })
                   fetch(`./static/txs/${raffleId}/ticketIds.txt`)
@@ -266,6 +246,46 @@ function handleValidate() {
                             }
                           })
                       }
+                      console.log(endObject, 'endObject+++++++++', initObject)
+                      const ticketIds = []
+                      for (let i = 0; i < ticketIds.length; i++) {
+                        if (ticketIds[i] === ticketId) {
+                          throw new Error(
+                            `Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
+                          );
+                        }
+                      }
+
+                      ticketIds.push(ticketId);
+
+                      if (ticketIds.length > initObject.noOfTickets) {
+                        break;
+                      }
+                      nextTicketTx = await loadNextTicketSaleTransaction();
+
+                      if (ticketIds.length !== initObject.noOfTickets) {
+                        throw Error("Ticket count does not match with expected count.");
+                      }
+                      console.log(ticketIds, 'ticketIds+++++++')
+                      const rng = new RNG(
+                        initObject.initialSeed,
+                        ...endObject.additionalSeeds
+                      );
+                      const sortedRewards = initObject.rewards.sort((a, b) => a.rank - b.rank); // from lowest rank to highest
+                      console.log(sortedRewards, 'sortedRewards++++++')
+                      const processedRewards = [];
+
+                      for (const reward of sortedRewards) {
+                        const winningTicketIds = [];
+                        for (let i = 0; i < reward.rewardCount; i++) {
+                          winningTicketIds.push(
+                            ticketIds[rng.getNextUInt32({ max: ticketIds.length })]
+                          );
+                        }
+                        console.log(winningTicketIds, 'winningTicketIds+++++++')
+                        processedRewards.push({ reward, winningTicketIds });
+                      }
+                      console.log(processedRewards, 'processedRewards+++++++++++++')
                       removeLoading()
                       getWinnerInfo(raffleId)
 
