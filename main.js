@@ -427,7 +427,8 @@ class RNG {
     this.currentSeed = crypto
       .algo.HMAC.create(CryptoJS.algo.SHA256, "Secret Passphrase")
       .update(this.currentSeed)
-    return currentSeed;
+      console.log(this.currentSeed,'this.currentSeed+++++++++++++++getNext')
+    return this.currentSeed;
   }
 
   getNextUInt32(o) {
