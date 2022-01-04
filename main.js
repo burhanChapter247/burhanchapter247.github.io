@@ -415,7 +415,7 @@ function removeLoading() {
 class RNG {
   constructor(seed, ...moreSeeds) {
     console.log(seed, 'seddddddddddddddddddddddd', moreSeeds)
-    this.currentSeed = crypto.algo.SHA256.create(CryptoJS.algo.SHA256, "Secret Passphrase");
+    this.currentSeed = crypto.algo.SHA256.create();
     this.currentSeed.update(Buffer.concat([
       Buffer.from(seed.toString()),
       ...moreSeeds.map((s) => Buffer.from(s.toString())),
@@ -427,11 +427,11 @@ class RNG {
 
   getNext() {
     console.log(currentSeed, 'getNext+++++++++++')
-    this.currentSeed = crypto
-      .algo.HMAC.create(CryptoJS.algo.SHA256, "Secret Passphrase")
+    this.currentSeed = crypto.algo.SHA256.create()
       .update(this.currentSeed)
       console.log(this.currentSeed,'this.currentSeed+++++++++++++++getNext')
       this.currentSeed.finalize()
+      this.currentSeed =Buffer.from(this.currentSeed.toString(crypto.enc.Hex))
     return this.currentSeed;
   }
 
