@@ -132,7 +132,7 @@ async function handleValidate() {
                   }
                   console.log("Initialization transaction has been valid")
                   fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
-                    .then((response) => await response.text())
+                    .then((response) => response.text())
                     .then((data) => {
                       let finalizeTxId = data.split(/\n/)[0]
                       fetch(`${S3BucketBaseUrl}/${finalizeTxId}.btx`)
@@ -202,7 +202,7 @@ async function handleValidate() {
                     })
                   const response = await fetch(`./static/txs/${raffleId}/ticketIds.txt`)
                   console.log(response,'response++++++++')
-                  const data = response.text()
+                  const data = await response.text()
                   console.log(data,'data++++++++++++')
                   const ticketIds = data.split(/\n/).filter(Boolean)
                   if (ticketIds.length !== initObject.noOfTickets) {
