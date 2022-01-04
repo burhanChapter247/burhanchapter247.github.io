@@ -1,4 +1,3 @@
-import { RNG } from './rng'
 const crypto = window.CryptoJS;
 let currentSeed = ""
 const int32OffsetsIn256Bits = [0, 4, 8, 12, 16, 20, 24, 28];
