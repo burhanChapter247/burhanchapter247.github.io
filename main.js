@@ -375,7 +375,7 @@ function stringToRegex(str) {
 }
 
 function showWinnerInfo(winnerInfoList) {
-  console.log(winnerInfo, 'winnerInfo+++++++')
+  console.log(winnerInfoList, 'winnerInfo+++++++')
   const sectionId = document.getElementById("winnerSec")
   const h3 = document.createElement("h3")
   const textNode = document.createTextNode("Winners");
@@ -383,7 +383,7 @@ function showWinnerInfo(winnerInfoList) {
   sectionId.insertBefore(h3, sectionId.childNodes[0]);
   const winnerInfoElement = document.getElementById("winnerInfo");
   winnerInfoElement.innerHTML = "<p>Loading........</p>";
-  if (winnerInfo && winnerInfo.length) {
+  if (winnerInfoList && winnerInfoList.length) {
     let innerElement = "<div >"
     for (const winnerInfo of winnerInfoList) {
       if (winnerInfo.winningTicketIds.length) {
