@@ -2,6 +2,7 @@ const crypto = window.CryptoJS;
 let currentSeed = ""
 const int32OffsetsIn256Bits = [0, 4, 8, 12, 16, 20, 24, 28];
 const int32MaxValue = 0b01111111111111111111111111111111; // equals 2147483647
+import { RNG } from "./rng";
 (function () {
 
   const selectRaffle = document.getElementById("selectGame");
@@ -23,6 +24,9 @@ const int32MaxValue = 0b01111111111111111111111111111111; // equals 2147483647
 })();
 
 function handleValidate() {
+  // test()
+  // console.log(window.RNG,'RNG++++++++++++')
+  const a = new RNG("aa","aaa")
   const bsv = window.bsvjs
   const e = document.getElementById("selectGame");
   const raffleId = e.options[e.selectedIndex].value;
