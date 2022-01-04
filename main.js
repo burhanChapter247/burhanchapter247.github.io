@@ -420,6 +420,7 @@ class RNG {
       Buffer.from(seed.toString()),
       ...moreSeeds.map((s) => Buffer.from(s.toString())),
     ]));
+    this.currentSeed.finalize()
   }
 
   getNext() {
@@ -428,6 +429,7 @@ class RNG {
       .algo.HMAC.create(CryptoJS.algo.SHA256, "Secret Passphrase")
       .update(this.currentSeed)
       console.log(this.currentSeed,'this.currentSeed+++++++++++++++getNext')
+      this.currentSeed.finalize()
     return this.currentSeed;
   }
 
@@ -438,10 +440,11 @@ class RNG {
     }
 
     const sha256Hash = this.getNext();
-    console.log(sha256Hash, "sha256HashgetNextUInt32")
+    console.log(sha256Hash, "sha256HashgetNextUInt32",int32OffsetsIn256Bits)
     const numbers = int32OffsetsIn256Bits.map((offset) =>
       sha256Hash.readUInt32BE(offset)
     );
+    console.log(numbers,'numbers+++++++++++++++++')
     let result = numbers[0];
     console.log(result, 'result+++++++++++++')
     for (let i = 1; i < numbers.length; i++) result = result ^ numbers[i];
