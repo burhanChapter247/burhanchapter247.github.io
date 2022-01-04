@@ -208,6 +208,7 @@ function handleValidate() {
                         removeLoading()
                         return
                       }
+                      const ticketIdsArray = []
                       for (ticketId of ticketIds) {
                         fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
                           .then((response) => response.arrayBuffer())
@@ -244,29 +245,21 @@ function handleValidate() {
                               removeLoading()
                               return
                             }
+                            for (let i = 0; i < ticketIdsArray.length; i++) {
+                              if (ticketIdsArray[i] === ticketId) {
+                                throw new Error(
+                                  `Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
+                                );
+                              }
+                            }
+                            ticketIdsArray.push(ticketId);
+                            // if (ticketIdsArray.length !== initObject.noOfTickets) {
+                            //   throw Error("Ticket count does not match with expected count.");
+                            // }
+                            console.log(ticketIdsArray, 'ticketIds+++++++')
                           })
                       }
                       console.log(endObject, 'endObject+++++++++@@@@@@', initObject)
-                      const ticketIdsArray = []
-                      for (let i = 0; i < ticketIdsArray.length; i++) {
-                        if (ticketIdsArray[i] === ticketId) {
-                          throw new Error(
-                            `Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
-                          );
-                        }
-                      }
-
-                      ticketIdsArray.push(ticketId);
-
-                      if (ticketIdsArray.length > initObject.noOfTickets) {
-                        break;
-                      }
-                      nextTicketTx = await loadNextTicketSaleTransaction();
-
-                      if (ticketIdsArray.length !== initObject.noOfTickets) {
-                        throw Error("Ticket count does not match with expected count.");
-                      }
-                      console.log(ticketIdsArray, 'ticketIds+++++++')
                       const rng = new RNG(
                         initObject.initialSeed,
                         ...endObject.additionalSeeds
