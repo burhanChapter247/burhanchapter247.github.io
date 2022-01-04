@@ -210,8 +210,10 @@ function handleValidate() {
                         return
                       }
                       const ticketIdsArray = []
-                      for (ticketId of ticketIds) {
-                        fetch(`${S3BucketBaseUrl}/${ticketId}.btx`)
+                      let count =0
+                      while (ticketIds.length !==ticketIdsArray.length) {
+                        console.log(ticketIds[count],'ticketIds[count]',count)
+                        fetch(`${S3BucketBaseUrl}/${ticketIds[count]}.btx`)
                           .then((response) => response.arrayBuffer())
                           .then((transactionData) => {
                             const {
@@ -258,6 +260,7 @@ function handleValidate() {
 
                             console.log(ticketIdsArray, 'ticketIds+++++++')
                           })
+                          count++
                       }
                       console.log(endObject, "additionalSeeds", endObject.additionalSeeds, 'endObject+++++++++@@@@@@', initObject)
                       console.log(ticketIdsArray.length, 'ticketIdsArray', initObject.noOfTickets)
