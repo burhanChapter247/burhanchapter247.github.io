@@ -237,6 +237,7 @@ function handleValidate() {
 
                             }
                             const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
+                            console.log(ticketId,'ticketId++++++++++++++',ticketIdBuf)
                             //TODO: need to remove raffle id check once seed update issue will resolve
                             if (!initTxidBuf.equals(realInitTxid)) {
                               alert("Data are corrupted")
@@ -254,9 +255,9 @@ function handleValidate() {
                               }
                             }
                             ticketIdsArray.push(ticketId);
-                            // if (ticketIdsArray.length !== initObject.noOfTickets) {
-                            //   throw Error("Ticket count does not match with expected count.");
-                            // }
+                            if (ticketIdsArray.length !== initObject.noOfTickets) {
+                              throw Error("Ticket count does not match with expected count.");
+                            }
                             console.log(ticketIdsArray, 'ticketIds+++++++')
                           })
                       }
@@ -279,9 +280,9 @@ function handleValidate() {
                         console.log(winningTicketIds, 'winningTicketIds+++++++')
                         processedRewards.push({ reward, winningTicketIds });
                       }
-                      console.log(processedRewards, 'processedRewards+++++++++++++')
+
                       removeLoading()
-                      getWinnerInfo(raffleId)
+                      showWinnerInfo(processedRewards)
 
                     })
                 })
@@ -370,7 +371,8 @@ function stringToRegex(str) {
   return new RegExp(main, options)
 }
 
-function getWinnerInfo(gameId) {
+function showWinnerInfo(winnerInfo) {
+  console.log(winnerInfo,'winnerInfo+++++++')
   const sectionId = document.getElementById("winnerSec")
   const h3 = document.createElement("h3")
   const textNode = document.createTextNode("Winners");
@@ -378,24 +380,22 @@ function getWinnerInfo(gameId) {
   sectionId.insertBefore(h3, sectionId.childNodes[0]);
   const winnerInfoElement = document.getElementById("winnerInfo");
   winnerInfoElement.innerHTML = "<p>Loading........</p>";
-  fetch(`https://ugoflip.herokuapp.com/v1/raffle/${gameId}/reward-info`)
-    .then((response) => response.json())
-    .then((responseData) => {
-      if (responseData.data) {
-        let innerElement = "<div >"
-        for (const reward of responseData.data) {
-          if (reward.winningTicketIds.length) {
-            innerElement += `<div style="text-align:center;"><span ><b> ${reward.rewardTitle}</b></span> <br />${reward.rewardPrice
-              }<br />${reward.winningTicketIds.join("<br />")}</div>`;
-          }
-        }
-
-        innerElement += "</ul>";
-        winnerInfoElement.innerHTML = innerElement;
-      } else {
-        winnerInfoElement.innerHTML = "<p>No Data Found</p>";
+  if (responseData.data) {
+    let innerElement = "<div >"
+    for (const reward of winnerInfo) {
+      console.log(reward,'reward+++++++++')
+      if (reward.winningTicketIds.length) {
+        innerElement += `<div style="text-align:center;"><span ><b> ${reward.rewardTitle}</b></span> <br />${reward.rewardPrice
+          }<br />${reward.winningTicketIds.join("<br />")}</div>`;
       }
-    });
+    }
+
+    innerElement += "</ul>";
+    winnerInfoElement.innerHTML = innerElement;
+  } else {
+    winnerInfoElement.innerHTML = "<p>No Data Found</p>";
+  }
+
 };
 
 function addLoading() {
@@ -421,12 +421,12 @@ class RNG {
         ...moreSeeds.map((s) => Buffer.from(s.toString())),
       ])
     );
-    console.log(this.currentSeed,'this.currentSeed+++++++++++constructor')
+    console.log(this.currentSeed, 'this.currentSeed+++++++++++constructor')
   }
 
   getNext() {
     this.currentSeed = bsv.Hash.sha256(this.currentSeed)
-    console.log(this.currentSeed,'this.currentSeedgetNext')
+    console.log(this.currentSeed, 'this.currentSeedgetNext')
     return this.currentSeed;
   }
 
@@ -437,11 +437,11 @@ class RNG {
     }
 
     const sha256Hash = this.getNext();
-    console.log(sha256Hash, "sha256HashgetNextUInt32",int32OffsetsIn256Bits)
+    console.log(sha256Hash, "sha256HashgetNextUInt32", int32OffsetsIn256Bits)
     const numbers = int32OffsetsIn256Bits.map((offset) =>
       sha256Hash.readUInt32BE(offset)
     );
-    console.log(numbers,'numbers+++++++++++++++++')
+    console.log(numbers, 'numbers+++++++++++++++++')
     let result = numbers[0];
     console.log(result, 'result+++++++++++++')
     for (let i = 1; i < numbers.length; i++) result = result ^ numbers[i];
