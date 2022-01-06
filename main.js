@@ -1,7 +1,4 @@
 
-const bsv = window.bsvjs
-// const int32OffsetsIn256Bits = [0, 4, 8, 12, 16, 20, 24, 28];
-// const int32MaxValue = 0b01111111111111111111111111111111; // equals 2147483647
 
 (function () {
 
