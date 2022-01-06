@@ -1,8 +1,11 @@
-const crypto = window.CryptoJS;
+// const rng = new RNG("abc",["a"]);
+// console.log(rng,'rng+++++++++')
+
 const bsv = window.bsvjs
 let currentSeed = ""
-const int32OffsetsIn256Bits = [0, 4, 8, 12, 16, 20, 24, 28];
-const int32MaxValue = 0b01111111111111111111111111111111; // equals 2147483647
+// const int32OffsetsIn256Bits = [0, 4, 8, 12, 16, 20, 24, 28];
+// const int32MaxValue = 0b01111111111111111111111111111111; // equals 2147483647
+
 (function () {
 
   const selectRaffle = document.getElementById("selectGame");
@@ -24,8 +27,6 @@ const int32MaxValue = 0b01111111111111111111111111111111; // equals 2147483647
 })();
 
 async function handleValidate() {
-
-  const bsv = window.bsvjs
   const e = document.getElementById("selectGame");
   const raffleId = e.options[e.selectedIndex].value;
   const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com"
@@ -212,7 +213,6 @@ async function handleValidate() {
                   }
                   const ticketIdsArray = []
                   let count = 0
-                  console.log(ticketIdsArray, 'ticketIdsArray', ticketIds)
                   while (ticketIdsArray.length < ticketIds.length) {
                     console.log(ticketIds[count], 'ticketIds[count]', count)
                     const transactionResponse = await fetch(`${S3BucketBaseUrl}/${ticketIds[count]}.btx`)
@@ -242,7 +242,6 @@ async function handleValidate() {
 
                     }
                     const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
-                    console.log(ticketId, 'ticketId++++++++++++++', ticketIdBuf)
                     //TODO: need to remove raffle id check once seed update issue will resolve
                     if (!initTxidBuf.equals(realInitTxid)) {
                       alert("Data are corrupted")
@@ -254,26 +253,25 @@ async function handleValidate() {
                     }
                     for (let i = 0; i < ticketIdsArray.length; i++) {
                       if (ticketIdsArray[i] === ticketId) {
-                        throw new Error(
+                       console.log(
                           `Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
                         );
+                        return
                       }
                     }
                     ticketIdsArray.push(ticketId);
                     console.log(ticketIdsArray, 'ticketIds+++++++')
                     count++
                   }
-                  console.log(endObject, "additionalSeeds", endObject.additionalSeeds, 'endObject+++++++++@@@@@@', initObject)
-                  console.log(ticketIdsArray.length, 'ticketIdsArray', initObject.noOfTickets)
                   if (ticketIdsArray.length !== initObject.noOfTickets) {
-                    throw Error("Ticket count does not match with expected count.");
+                   console.log("Ticket count does not match with expected count.");
+                   return
                   }
                   const rng = new RNG(
                     initObject.initialSeed,
                     ...endObject.additionalSeeds
                   );
                   const sortedRewards = initObject.rewards.sort((a, b) => a.rank - b.rank); // from lowest rank to highest
-                  console.log(sortedRewards, 'sortedRewards++++++', ticketIdsArray, ticketIdsArray.length)
                   const processedRewards = [];
 
                   for (const reward of sortedRewards) {
@@ -283,7 +281,6 @@ async function handleValidate() {
                         ticketIdsArray[rng.getNextUInt32({ max: ticketIdsArray.length })]
                       );
                     }
-                    console.log(winningTicketIds, 'winningTicketIds+++++++')
                     processedRewards.push({ reward, winningTicketIds });
                   }
                   removeLoading()
@@ -414,57 +411,63 @@ function removeLoading() {
 }
 
 
-class RNG {
-  constructor(seed, ...moreSeeds) {
-    this.currentSeed = bsv.Hash.sha256(
-      Buffer.concat([
-        Buffer.from(seed.toString()),
-        ...moreSeeds.map((s) => Buffer.from(s.toString())),
-      ])
-    );
-  }
+// class RNG {
+//   constructor(seed, ...moreSeeds) {
+//     this.currentSeed = bsv.Hash.sha256(
+//       Buffer.concat([
+//         Buffer.from(seed.toString()),
+//         ...moreSeeds.map((s) => Buffer.from(s.toString())),
+//       ])
+//     );
+//   }
 
-  getNext() {
-    this.currentSeed = bsv.Hash.sha256(this.currentSeed)
-    return this.currentSeed;
-  }
+//   getNext() {
+//     this.currentSeed = bsv.Hash.sha256(this.currentSeed)
+//     return this.currentSeed;
+//   }
 
-  getNextUInt32(o) {
-    if (o) {
-      return this.getNextUInt32Between(o);
-    }
-    const sha256Hash = this.getNext();
-    const numbers = int32OffsetsIn256Bits.map((offset) =>
-      sha256Hash.readUInt32BE(offset)
-    );
-    let result = numbers[0];
-    for (let i = 1; i < numbers.length; i++) result = result ^ numbers[i];
-    result = result & int32MaxValue; // this will remove the sign from the result (-42 becomes 42)
-    return result;
-  }
+//   getNextUInt32(o) {
+//     if (o) {
+//       return this.getNextUInt32Between(o);
+//     }
+//     const sha256Hash = this.getNext();
+//     const numbers = int32OffsetsIn256Bits.map((offset) =>
+//       sha256Hash.readUInt32BE(offset)
+//     );
+//     let result = numbers[0];
+//     for (let i = 1; i < numbers.length; i++) result = result ^ numbers[i];
+//     result = result & int32MaxValue; // this will remove the sign from the result (-42 becomes 42)
+//     return result;
+//   }
 
-  getNextUInt32Between(o) {
-    if (!o) {
-      throw new Error("no integer limits provided");
-    }
-    if (!o.max) {
-      throw new Error("no integer max limit provided");
-    }
-    if (!o.min) o.min = 0;
-    o.min = Math.floor(o.min);
-    o.max = Math.floor(o.max);
-    if (o.min < 0) {
-      throw new Error(`min limit cannot be smaller than 0`);
-    }
-    if (o.min >= o.max) {
-      throw new Error(
-        `max limit (${o.max}) must be greater than min limit (${o.min})`
-      );
-    }
-    const diff = o.max - o.min;
-    const int = this.getNextUInt32();
-    const m = int % diff;
-    const result = o.min + m;
-    return result;
-  }
-}
+//   getNextUInt32Between(o) {
+//     if (!o) {
+//       console.log("no integer limits provided");
+//       return
+//     }
+//     if (!o.max) {
+//       console.log("no integer max limit provided");
+//       return
+//     }
+//     if (!o.min) o.min = 0;
+//     o.min = Math.floor(o.min);
+//     o.max = Math.floor(o.max);
+//     if (o.min < 0) {
+//       console.log(`min limit cannot be smaller than 0`);
+//       return
+
+//     }
+//     if (o.min >= o.max) {
+//       console.log(
+//         `max limit (${o.max}) must be greater than min limit (${o.min})`
+//       );
+//       return
+
+//     }
+//     const diff = o.max - o.min;
+//     const int = this.getNextUInt32();
+//     const m = int % diff;
+//     const result = o.min + m;
+//     return result;
+//   }
+// }
