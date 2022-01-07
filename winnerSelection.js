@@ -17,7 +17,7 @@ function validateInitTransaction(transactionData, pubKey) {
 		return
 
 	}
-	const initObject = JSON.parse(messageBuf.toString());
+	initObject = JSON.parse(messageBuf.toString());
 	if (initObject.noOfTickets < 2) {
 		alert("Data are corrupted")
 		console.log("Game must have atleast more than 2 tickets");
@@ -71,11 +71,11 @@ function validateInitTransaction(transactionData, pubKey) {
 		return
 
 	}
-   return initObject
+	return initObject
 }
 
 
-function validateEndTransaction (transactionData, pubKey,realInitTxid){
+function validateEndTransaction(transactionData, pubKey, realInitTxid) {
 	const {
 		messageType,
 		signature,
@@ -90,7 +90,7 @@ function validateEndTransaction (transactionData, pubKey,realInitTxid){
 		alert("Data are corrupted")
 		console.log("Finalization TX Signature validation failed");
 	}
-	const endObject = JSON.parse(messageBuf.toString());
+	endObject = JSON.parse(messageBuf.toString());
 	const initTxid = Buffer.from(endObject.initializationTxid, "hex");
 	console.log(realInitTxid, 'realInitTxid', initTxid)
 	if (!initTxid.equals(realInitTxid)) {
@@ -135,6 +135,6 @@ function validateEndTransaction (transactionData, pubKey,realInitTxid){
 
 		}
 	}
-	console.log(endObject,'wineerslection')
-   return endObject
+	console.log(endObject, 'wineerslection')
+	return endObject
 }
