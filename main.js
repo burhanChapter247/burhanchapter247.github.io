@@ -69,7 +69,7 @@ async function handleValidate() {
                       fetch(`${S3BucketBaseUrl}/${finalizeTxId}.btx`)
                         .then((response) => response.arrayBuffer())
                         .then((transactionData) => {
-                          endObject = validateEndTransaction(transactionData, pubKey)
+                          endObject = validateEndTransaction(transactionData, pubKey,realInitTxid)
                           console.log(endObject,'endObject+++++')
                           // const {
                           //   messageType,
