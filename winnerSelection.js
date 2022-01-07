@@ -71,5 +71,5 @@ function validateInitTransaction(transactionData, pubKey) {
 		removeLoading()
 		return
 	}
-
+   return initObject
 }
