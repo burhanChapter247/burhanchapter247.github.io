@@ -47,11 +47,11 @@ async function handleValidate() {
               fetch(`${S3BucketBaseUrl}/${initializeTxId}.btx`)
                 .then((response) => response.arrayBuffer())
                 .then(async(transactionData) => {
-                  const {
-                    messageType,
-                    signature,
-                    messageParts: [messageBuf],
-                  } = parseTransaction(transactionData, 1)
+                  // const {
+                  //   messageType,
+                  //   signature,
+                  //   messageParts: [messageBuf],
+                  // } = parseTransaction(transactionData, 1)
                   const buf = Buffer.alloc(transactionData.byteLength);
 
                   const view = new Uint8Array(transactionData);
@@ -59,73 +59,74 @@ async function handleValidate() {
                     buf[i] = view[i];
                   }
                   const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-                  if (messageType !== 0) {
-                    alert("Data are corrupted")
-                    console.log("Initialization TX message type must be RAFFLE_INITIALIZATION");
-                    removeLoading()
-                    return
-                  }
-                  if (!validateSignature(pubKey, signature, [messageBuf])) {
-                    alert("Data are corrupted")
-                    console.log("Initialization TX Signature validation failed");
-                    removeLoading()
-                    return
+                  initObject = validateInitTransaction(transactionData)
+                  // if (messageType !== 0) {
+                  //   alert("Data are corrupted")
+                  //   console.log("Initialization TX message type must be RAFFLE_INITIALIZATION");
+                  //   removeLoading()
+                  //   return
+                  // }
+                  // if (!validateSignature(pubKey, signature, [messageBuf])) {
+                  //   alert("Data are corrupted")
+                  //   console.log("Initialization TX Signature validation failed");
+                  //   removeLoading()
+                  //   return
 
-                  }
-                  initObject = JSON.parse(messageBuf.toString());
-                  if (initObject.noOfTickets < 2) {
-                    alert("Data are corrupted")
-                    console.log("Game must have atleast more than 2 tickets");
-                    removeLoading()
-                    return
+                  // }
+                  // initObject = JSON.parse(messageBuf.toString());
+                  // if (initObject.noOfTickets < 2) {
+                  //   alert("Data are corrupted")
+                  //   console.log("Game must have atleast more than 2 tickets");
+                  //   removeLoading()
+                  //   return
 
-                  }
-                  if (!initObject.rewards.length) {
-                    alert("Data are corrupted")
-                    console.log("Game must have atleast 1 reward");
-                    removeLoading()
-                    return
+                  // }
+                  // if (!initObject.rewards.length) {
+                  //   alert("Data are corrupted")
+                  //   console.log("Game must have atleast 1 reward");
+                  //   removeLoading()
+                  //   return
 
-                  }
+                  // }
 
-                  if (initObject.rewards.every((item) => item.rewardCount > 1 && item.rewardPrice && item.rewardTitle && item.description && item.rank > 0)) {
-                    alert("Data are corrupted")
-                    console.log("Game rewards not have valid data");
-                    removeLoading()
-                    return
-                  }
+                  // if (initObject.rewards.every((item) => item.rewardCount > 1 && item.rewardPrice && item.rewardTitle && item.description && item.rank > 0)) {
+                  //   alert("Data are corrupted")
+                  //   console.log("Game rewards not have valid data");
+                  //   removeLoading()
+                  //   return
+                  // }
 
-                  if (!initObject.initialSeed) {
-                    alert("Data are corrupted")
-                    console.log("Game must contain the initial seeds")
-                    removeLoading()
-                    return
+                  // if (!initObject.initialSeed) {
+                  //   alert("Data are corrupted")
+                  //   console.log("Game must contain the initial seeds")
+                  //   removeLoading()
+                  //   return
 
-                  }
-                  const regexExp = /^[a-f0-9]{64}$/gi;
-                  if (!regexExp.test(initObject.initialSeed)) {
-                    alert("Data are corrupted")
-                    console.log("Invalid initial seed")
-                    removeLoading()
-                    return
+                  // }
+                  // const regexExp = /^[a-f0-9]{64}$/gi;
+                  // if (!regexExp.test(initObject.initialSeed)) {
+                  //   alert("Data are corrupted")
+                  //   console.log("Invalid initial seed")
+                  //   removeLoading()
+                  //   return
 
-                  }
+                  // }
 
-                  if (!initObject.additionalSeeds?.length) {
-                    alert("Data are corrupted")
-                    console.log("Game must contain at least one additional seed");
-                    removeLoading()
-                    return
+                  // if (!initObject.additionalSeeds?.length) {
+                  //   alert("Data are corrupted")
+                  //   console.log("Game must contain at least one additional seed");
+                  //   removeLoading()
+                  //   return
 
-                  }
+                  // }
 
-                  if (!initObject.additionalSeeds.every(additionalSeed => additionalSeed.description && additionalSeed.regexPattern)) {
-                    alert("Data are corrupted")
-                    console.log("Game must contain valid additional seeds")
-                    removeLoading()
-                    return
+                  // if (!initObject.additionalSeeds.every(additionalSeed => additionalSeed.description && additionalSeed.regexPattern)) {
+                  //   alert("Data are corrupted")
+                  //   console.log("Game must contain valid additional seeds")
+                  //   removeLoading()
+                  //   return
 
-                  }
+                  // }
                   console.log("Initialization transaction has been valid")
                   fetch(`./static/txs/${raffleId}/finalizeTx.txt`)
                     .then((response) => response.text())
@@ -290,83 +291,7 @@ async function handleValidate() {
       console.log(error, 'error+++++++')
 
     })
-
-
-}
-
-function parseTransaction(transactionData, expectedMessageParts) {
-  const bsv = window.bsvjs
-
-  const buf = Buffer.alloc(transactionData.byteLength);
-  const view = new Uint8Array(transactionData);
-  for (let i = 0; i < buf.length; ++i) {
-    buf[i] = view[i];
-  }
-  const data = bsv.Tx.fromBuffer((buf))
-  const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
-  const messageType = bufferValues[2];
-  const signature = bufferValues[3];
-  const restOfChunks = bufferValues.slice(4);
-  const messageParts = restOfChunks.filter((i) => i).map((i) => i);
-
-  if (restOfChunks.length > messageParts.length)
-    console.log(
-      "Transaction was expected to end with Message Part variables and nothing else"
-    );
-  if (!messageType) {
-    console.log("Transaction without a Message Type variable was detected");
-    return
-  }
-  if (messageType.length !== 1) {
-    console.log("Transaction Message Type must be exactly 8 bits");
-    return
-  }
-  if (!signature) {
-    console.log("Transaction without a Signature variable was detected");
-    return
-
-  }
-  if (signature.length < 50) {
-    console.log("Transaction Signature variable is too small");
-    return
-  }
-  if (messageParts.length !== expectedMessageParts) {
-    console.log(
-      `Transaction was expected to have exactly ${expectedMessageParts} Message Variables, but was ${messageParts.length}`
-    );
-    return
-
-  }
-  return {
-    messageType: messageType?.readInt8(),
-    signature: bsv.Sig.fromBuffer(signature),
-    messageParts,
-  };
-}
-
-function validateSignature(
-  pubKey,
-  signature,
-  messageParts
-) {
-  const bsv = window.bsvjs
-
-  const hash = bsv.Hash.sha256(Buffer.concat(messageParts));
-  console.log(hash, 'hash', signature, 'signature', pubKey)
-  return bsv.Ecdsa.verify(hash, signature, pubKey);
-}
-
-function stringToRegex(str) {
-  // Main regex
-  const main = str.match(/\/(.+)\/.*/)[1]
-
-  // Regex options
-  const options = str.match(/\/.+\/(.*)/)[1]
-
-  // Compiled regex
-  return new RegExp(main, options)
-}
-
+} 
 function showWinnerInfo(winnerInfoList) {
   console.log(winnerInfoList, 'winnerInfo+++++++')
   const sectionId = document.getElementById("winnerSec")
@@ -407,63 +332,3 @@ function removeLoading() {
 }
 
 
-// class RNG {
-//   constructor(seed, ...moreSeeds) {
-//     this.currentSeed = bsv.Hash.sha256(
-//       Buffer.concat([
-//         Buffer.from(seed.toString()),
-//         ...moreSeeds.map((s) => Buffer.from(s.toString())),
-//       ])
-//     );
-//   }
-
-//   getNext() {
-//     this.currentSeed = bsv.Hash.sha256(this.currentSeed)
-//     return this.currentSeed;
-//   }
-
-//   getNextUInt32(o) {
-//     if (o) {
-//       return this.getNextUInt32Between(o);
-//     }
-//     const sha256Hash = this.getNext();
-//     const numbers = int32OffsetsIn256Bits.map((offset) =>
-//       sha256Hash.readUInt32BE(offset)
-//     );
-//     let result = numbers[0];
-//     for (let i = 1; i < numbers.length; i++) result = result ^ numbers[i];
-//     result = result & int32MaxValue; // this will remove the sign from the result (-42 becomes 42)
-//     return result;
-//   }
-
-//   getNextUInt32Between(o) {
-//     if (!o) {
-//       console.log("no integer limits provided");
-//       return
-//     }
-//     if (!o.max) {
-//       console.log("no integer max limit provided");
-//       return
-//     }
-//     if (!o.min) o.min = 0;
-//     o.min = Math.floor(o.min);
-//     o.max = Math.floor(o.max);
-//     if (o.min < 0) {
-//       console.log(`min limit cannot be smaller than 0`);
-//       return
-
-//     }
-//     if (o.min >= o.max) {
-//       console.log(
-//         `max limit (${o.max}) must be greater than min limit (${o.min})`
-//       );
-//       return
-
-//     }
-//     const diff = o.max - o.min;
-//     const int = this.getNextUInt32();
-//     const m = int % diff;
-//     const result = o.min + m;
-//     return result;
-//   }
-// }
