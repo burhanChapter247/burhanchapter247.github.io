@@ -138,7 +138,7 @@ function validateEndTransaction(transactionData, pubKey, realInitTxid) {
 	return endObject
 }
 
-function validateTicketSaleTransaction(realInitTxid, transactionData) {
+function validateTicketSaleTransaction(realInitTxid, transactionData, pubKey) {
 	const {
 		messageType,
 		signature,
