@@ -135,6 +135,40 @@ function validateEndTransaction(transactionData, pubKey, realInitTxid) {
 
 		}
 	}
-	console.log(endObject, 'wineerslection')
 	return endObject
+}
+
+function validateTicketSaleTransaction(realInitTxid, transactionData) {
+	const {
+		messageType,
+		signature,
+		messageParts: [initTxidBuf, ticketIdBuf],
+	} = parseTransaction(transactionData, 2)
+	console.log(messageType, 'messageType++++++++', signature)
+	console.log(realInitTxid, 'initTxid+++++++', initTxidBuf)
+	if (messageType !== 1) {
+		alert("Data are corrupted")
+		console.log("Finalization TX message type must be RAFFLE_TICKET_SALE");
+		removeLoading()
+
+		return
+
+	}
+	if (!validateSignature(pubKey, signature, [initTxidBuf, ticketIdBuf])) {
+		alert("Data are corrupted")
+		console.log("Finalization TX Signature validation failed");
+		removeLoading()
+		return
+	} const ticketId = bsv.Base58.fromBuffer(ticketIdBuf).toString();
+	//TODO: need to remove raffle id check once seed update issue will resolve
+	if (!initTxidBuf.equals(realInitTxid)) {
+		alert("Data are corrupted")
+		console.log(
+			`Ticket Sale transaction for ticket ${ticketId} specifies the wrong initialization TXID`
+		);
+		removeLoading()
+		return
+	}
+
+	return ticketId
 }
