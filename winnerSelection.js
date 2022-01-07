@@ -1,4 +1,4 @@
-function validateInitTransaction(transactionData) {
+function validateInitTransaction(transactionData, pubKey) {
 	const {
 		messageType,
 		signature,

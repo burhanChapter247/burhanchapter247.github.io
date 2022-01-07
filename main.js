@@ -59,7 +59,7 @@ async function handleValidate() {
                     buf[i] = view[i];
                   }
                   const realInitTxid = Buffer.from(bsv.Tx.fromBuffer(buf).id(), "hex");
-                  initObject = validateInitTransaction(transactionData)
+                  initObject = validateInitTransaction(transactionData, pubKey)
                   // if (messageType !== 0) {
                   //   alert("Data are corrupted")
                   //   console.log("Initialization TX message type must be RAFFLE_INITIALIZATION");
