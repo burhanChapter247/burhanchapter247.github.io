@@ -1,3 +1,49 @@
+async function selectWinners(initTransaction, finalizationTransaction, loadNextTicketSaleTransaction, pubKey) {
+	const initObject = validateInitTransaction(initTransaction, pubKey);
+	const initTxid = Buffer.from(bsv.Tx.fromBuffer(initTransaction).id(), "hex");
+	const finalizationObject = validateEndTransaction(
+		initObject,
+		initTxid,
+		finalizationTransaction,
+		pubKey
+	);
+	const ticketIds = []
+	let count = 0
+	let nextTicketTx = await loadNextTicketSaleTransaction();
+	console.log(nextTicketTx, 'nextTicketTx+++++')
+	while (nextTicketTx) {
+		const ticketId = validateTicketSaleTransaction(
+			initTxid,
+			nextTicketTx,
+			pubKey
+		);
+		console.log(ticketId, 'ticketId+++++++++')
+		for (let i = 0; i < ticketIds.length; i++) {
+			if (ticketIds[i] === ticketId) {
+				throw new Error(
+					`Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
+				);
+			}
+		}
+
+		ticketIds.push(ticketId);
+
+		if (ticketIds.length > initObject.noOfTickets) {
+			break;
+		}
+		nextTicketTx = await loadNextTicketSaleTransaction();
+		count++
+	}
+	if (ticketIds.length !== initObject.noOfTickets) {
+		throw Error("Ticket count does not match with expected count.");
+	}
+	const rng = new RNG(
+		initObject.initialSeed,
+		...finalizationObject.additionalSeeds
+	);
+
+}
+
 function validateInitTransaction(transactionData, pubKey) {
 	const {
 		messageType,
@@ -173,64 +219,64 @@ function validateTicketSaleTransaction(realInitTxid, transactionData, pubKey) {
 	return ticketId
 }
 
-function parseTransaction(transactionData, expectedMessageParts) {
-  const bsv = window.bsvjs
+function parseTransaction(txBuffer, expectedMessageParts) {
+	// const bsv = window.bsvjs
 
-  const buf = Buffer.alloc(transactionData.byteLength);
-  const view = new Uint8Array(transactionData);
-  for (let i = 0; i < buf.length; ++i) {
-    buf[i] = view[i];
-  }
-  const data = bsv.Tx.fromBuffer((buf))
-  const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
-  const messageType = bufferValues[2];
-  const signature = bufferValues[3];
-  const restOfChunks = bufferValues.slice(4);
-  const messageParts = restOfChunks.filter((i) => i).map((i) => i);
+	// const buf = Buffer.alloc(transactionData.byteLength);
+	// const view = new Uint8Array(transactionData);
+	// for (let i = 0; i < buf.length; ++i) {
+	// 	buf[i] = view[i];
+	// }
+	const data = bsv.Tx.fromBuffer((txBuffer))
+	const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
+	const messageType = bufferValues[2];
+	const signature = bufferValues[3];
+	const restOfChunks = bufferValues.slice(4);
+	const messageParts = restOfChunks.filter((i) => i).map((i) => i);
 
-  if (restOfChunks.length > messageParts.length)
-    console.log(
-      "Transaction was expected to end with Message Part variables and nothing else"
-    );
-  if (!messageType) {
-    console.log("Transaction without a Message Type variable was detected");
-    return
-  }
-  if (messageType.length !== 1) {
-    console.log("Transaction Message Type must be exactly 8 bits");
-    return
-  }
-  if (!signature) {
-    console.log("Transaction without a Signature variable was detected");
-    return
+	if (restOfChunks.length > messageParts.length)
+		console.log(
+			"Transaction was expected to end with Message Part variables and nothing else"
+		);
+	if (!messageType) {
+		console.log("Transaction without a Message Type variable was detected");
+		return
+	}
+	if (messageType.length !== 1) {
+		console.log("Transaction Message Type must be exactly 8 bits");
+		return
+	}
+	if (!signature) {
+		console.log("Transaction without a Signature variable was detected");
+		return
 
-  }
-  if (signature.length < 50) {
-    console.log("Transaction Signature variable is too small");
-    return
-  }
-  if (messageParts.length !== expectedMessageParts) {
-    console.log(
-      `Transaction was expected to have exactly ${expectedMessageParts} Message Variables, but was ${messageParts.length}`
-    );
-    return
+	}
+	if (signature.length < 50) {
+		console.log("Transaction Signature variable is too small");
+		return
+	}
+	if (messageParts.length !== expectedMessageParts) {
+		console.log(
+			`Transaction was expected to have exactly ${expectedMessageParts} Message Variables, but was ${messageParts.length}`
+		);
+		return
 
-  }
-  return {
-    messageType: messageType?.readInt8(),
-    signature: bsv.Sig.fromBuffer(signature),
-    messageParts,
-  };
+	}
+	return {
+		messageType: messageType?.readInt8(),
+		signature: bsv.Sig.fromBuffer(signature),
+		messageParts,
+	};
 }
 
 function validateSignature(
-  pubKey,
-  signature,
-  messageParts
+	pubKey,
+	signature,
+	messageParts
 ) {
-  const bsv = window.bsvjs
+	const bsv = window.bsvjs
 
-  const hash = bsv.Hash.sha256(Buffer.concat(messageParts));
-  console.log(hash, 'hash', signature, 'signature', pubKey)
-  return bsv.Ecdsa.verify(hash, signature, pubKey);
+	const hash = bsv.Hash.sha256(Buffer.concat(messageParts));
+	console.log(hash, 'hash', signature, 'signature', pubKey)
+	return bsv.Ecdsa.verify(hash, signature, pubKey);
 }
