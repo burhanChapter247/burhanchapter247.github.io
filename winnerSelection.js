@@ -9,7 +9,7 @@ async function selectWinners(initTransaction, finalizationTransaction, loadNextT
 	);
 	const ticketIds = []
 	let count = 0
-	let nextTicketTx = await loadNextTicketSaleTransaction();
+	let nextTicketTx = await loadNextTicketSaleTransaction(count);
 	console.log(nextTicketTx, 'nextTicketTx+++++')
 	while (nextTicketTx) {
 		const ticketId = validateTicketSaleTransaction(
@@ -31,9 +31,10 @@ async function selectWinners(initTransaction, finalizationTransaction, loadNextT
 		if (ticketIds.length > initObject.noOfTickets) {
 			break;
 		}
-		nextTicketTx = await loadNextTicketSaleTransaction();
 		count++
+		nextTicketTx = await loadNextTicketSaleTransaction(count);
 	}
+
 	if (ticketIds.length !== initObject.noOfTickets) {
 		throw Error("Ticket count does not match with expected count.");
 	}

@@ -268,7 +268,9 @@ async function readFile(fileName) {
 }
 
 async function loadNextTransaction(ticketId) {
+  console.log(ticketId,'ticketId++++++++')
   const transactionResponse = await readTxBufferFromS3File(`${ticketId}.btx`)
+  console.log(transactionResponse,'transactionResponsetransactionResponse')
   return transactionResponse
 }
 
