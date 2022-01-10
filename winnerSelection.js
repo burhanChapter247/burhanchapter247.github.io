@@ -52,8 +52,8 @@ async function selectWinners(initTransaction, finalizationTransaction, loadNextT
 		const winningTicketIds = [];
 		for (let i = 0; i < reward.rewardCount; i++) {
 			winningTicketIds.push(
-				ticketIdsArray[
-				rng.getNextUInt32({ max: ticketIdsArray.length })
+				ticketIds[
+				rng.getNextUInt32({ max: ticketIds.length })
 				]
 			);
 		}
