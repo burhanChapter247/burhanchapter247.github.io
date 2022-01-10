@@ -93,7 +93,7 @@ async function handleValidate() {
                     const transactionData = await transactionResponse.arrayBuffer()
                     console.log(transactionData, 'arrayBuffer')
                     ticketId = validateTicketSaleTransaction(realInitTxid, transactionData, pubKey)
-                    console.log(ticketId,'ticketId++++++++')
+                    console.log(ticketId, 'ticketId++++++++')
                     for (let i = 0; i < ticketIdsArray.length; i++) {
                       if (ticketIdsArray[i] === ticketId) {
                         console.log(
