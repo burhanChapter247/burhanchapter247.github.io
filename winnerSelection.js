@@ -42,7 +42,26 @@ async function selectWinners(initTransaction, finalizationTransaction, loadNextT
 		initObject.initialSeed,
 		...finalizationObject.additionalSeeds
 	);
+	const sortedRewards = initObject.rewards.sort(
+		(a, b) => a.rank - b.rank
+	); // from lowest rank to highest
+	const processedRewards = [];
+	console.log(sortedRewards,'sortedRewards')
 
+	for (const reward of sortedRewards) {
+		const winningTicketIds = [];
+		for (let i = 0; i < reward.rewardCount; i++) {
+			winningTicketIds.push(
+				ticketIdsArray[
+				rng.getNextUInt32({ max: ticketIdsArray.length })
+				]
+			);
+		}
+		processedRewards.push({ reward, winningTicketIds });
+	}
+	removeLoading();
+	console.log(processedRewards,'processedRewards++++++')
+	showWinnerInfo(processedRewards);
 }
 
 function validateInitTransaction(transactionData, pubKey) {
@@ -228,7 +247,7 @@ function parseTransaction(txBuffer, expectedMessageParts) {
 	// for (let i = 0; i < buf.length; ++i) {
 	// 	buf[i] = view[i];
 	// }
-	console.log(txBuffer,'txBuffertxBuffer')
+	console.log(txBuffer, 'txBuffertxBuffer')
 	const data = bsv.Tx.fromBuffer(txBuffer)
 	const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
 	const messageType = bufferValues[2];
