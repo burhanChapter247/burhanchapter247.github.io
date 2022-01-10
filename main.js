@@ -52,15 +52,15 @@ async function handleValidate() {
       );
     const ticketIds = await readFile(`${raffleId}/ticketIds.txt`)
     console.log(ticketIds, 'ticketIds')
-    const nextRecord = ""
     selectWinners(
       initializationTx,
       finalizationTx,
       async (count) => {
         console.log(count, 'count+++++++')
-        if (count < ticketIds.length)
-          nextRecord = await readTxBufferFromS3File(`${ticketIds[count]}.btx`)
-        return nextRecord
+        if (count < ticketIds.length) {
+          const nextRecord = await readTxBufferFromS3File(`${ticketIds[count]}.btx`)
+          return nextRecord
+        }
       },
       pubKey
     )
@@ -268,9 +268,9 @@ async function readFile(fileName) {
 }
 
 async function loadNextTransaction(ticketId) {
-  console.log(ticketId,'ticketId++++++++')
+  console.log(ticketId, 'ticketId++++++++')
   const transactionResponse = await readTxBufferFromS3File(`${ticketId}.btx`)
-  console.log(transactionResponse,'transactionResponsetransactionResponse')
+  console.log(transactionResponse, 'transactionResponsetransactionResponse')
   return transactionResponse
 }
 
