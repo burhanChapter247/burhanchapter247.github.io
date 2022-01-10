@@ -50,7 +50,7 @@ async function handleValidate() {
       console.log(
         "Failed to find Finalization Tx for : " + raffleId
       );
-    const ticketIds = await readFile(`${raffleId}/ticketIds.txt`)
+    const ticketIds = await readFile(`${raffleId}/ticketIds.txt`).split(/\n/).filter(Boolean)
     console.log(ticketIds, 'ticketIds')
     selectWinners(
       initializationTx,
