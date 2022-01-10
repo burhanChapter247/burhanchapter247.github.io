@@ -44,10 +44,10 @@ async function handleValidate() {
     addLoading();
     const initializationTx = await readTxBufferFromS3File(`${initializeTxId}.btx`);
     if (!initializationTx)
-      throw new NotFoundError("Failed to find Init Tx for : " + raffleId);
+      console.log("Failed to find Init Tx for : " + raffleId);
     const finalizationTx = await readTxBufferFromS3File(`${finalizeTXId}.btx`);
     if (!finalizationTx)
-      throw new NotFoundError(
+      console.log(
         "Failed to find Finalization Tx for : " + raffleId
       );
     const ticketIds = await readFile(`${raffleId}/ticketIds.txt`)
@@ -271,7 +271,7 @@ async function loadNextTransaction(ticketId) {
   return transactionResponse
 }
 
-async function selectWinner(initTransaction, finalizationTransaction, loadNextTicketSaleTransaction, pubKey) {
+async function selectWinners(initTransaction, finalizationTransaction, loadNextTicketSaleTransaction, pubKey) {
   const initObject = validateInitTransaction(initTransaction, pubKey);
   const initTxid = Buffer.from(bsv.Tx.fromBuffer(initTransaction).id(), "hex");
   const finalizationObject = validateEndTransaction(
