@@ -12,7 +12,7 @@
       }
     });
 })();
-const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com";
+const S3BucketBaseUrl = "https://ugoflipbucket.s3.eu-west-2.amazonaws.com/";
 async function handleValidate() {
   const bsv = window.bsvjs;
   const e = document.getElementById("selectGame");
