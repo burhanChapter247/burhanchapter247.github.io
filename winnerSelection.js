@@ -3,10 +3,9 @@ async function selectWinners(initTransaction, finalizationTransaction, loadNextT
 	const initObject = validateInitTransaction(initTransaction, pubKey);
 	const initTxid = Buffer.from(bsv.Tx.fromBuffer(initTransaction).id(), "hex");
 	const finalizationObject = validateEndTransaction(
-		initObject,
-		initTxid,
 		finalizationTransaction,
-		pubKey
+		pubKey,
+		initTxid
 	);
 	const ticketIds = []
 	let count = 0
@@ -228,7 +227,7 @@ function parseTransaction(txBuffer, expectedMessageParts) {
 	// for (let i = 0; i < buf.length; ++i) {
 	// 	buf[i] = view[i];
 	// }
-	const data = bsv.Tx.fromBuffer((txBuffer))
+	const data = bsv.Tx.fromBuffer(txBuffer)
 	const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
 	const messageType = bufferValues[2];
 	const signature = bufferValues[3];
