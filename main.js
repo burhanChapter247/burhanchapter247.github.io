@@ -36,7 +36,8 @@ async function handleValidate() {
   if (!finalizeTXFileData) {
     alert("Game result have not been announced yet.");
   }
-  const finalizeTXId = finalizeTXFileData.split(/\n/).split(/\n/)[0]
+  console.log(finalizeTXFileData,'finalizeTXFileData')
+  const finalizeTXId = finalizeTXFileData.split(/\n/)[0]
   console.log(initializeTxFileData, 'initializeTxFileData', initializeTxId)
   console.log(finalizeTXFileData, 'finalizeTXFileData', finalizeTXId)
   if (initializeTxId) {
