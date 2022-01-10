@@ -1,4 +1,5 @@
 async function selectWinners(initTransaction, finalizationTransaction, loadNextTicketSaleTransaction, pubKey) {
+	console.log(initTransaction, 'initTransaction', finalizationTransaction)
 	const initObject = validateInitTransaction(initTransaction, pubKey);
 	const initTxid = Buffer.from(bsv.Tx.fromBuffer(initTransaction).id(), "hex");
 	const finalizationObject = validateEndTransaction(

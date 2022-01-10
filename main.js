@@ -36,7 +36,7 @@ async function handleValidate() {
   if (!finalizeTXFileData) {
     alert("Game result have not been announced yet.");
   }
-  console.log(finalizeTXFileData,'finalizeTXFileData')
+  console.log(finalizeTXFileData, 'finalizeTXFileData')
   const finalizeTXId = finalizeTXFileData.split(/\n/)[0]
   console.log(initializeTxFileData, 'initializeTxFileData', initializeTxId)
   console.log(finalizeTXFileData, 'finalizeTXFileData', finalizeTXId)
@@ -52,14 +52,14 @@ async function handleValidate() {
       );
     const ticketIds = await readFile(`${raffleId}/ticketIds.txt`)
     console.log(ticketIds, 'ticketIds')
-    const nextRecord=""
+    const nextRecord = ""
     selectWinners(
       initializationTx,
       finalizationTx,
       async (count) => {
         console.log(count, 'count+++++++')
         if (count < ticketIds.length)
-           nextRecord = await readTxBufferFromS3File(`${ticketIds[count]}.btx`)
+          nextRecord = await readTxBufferFromS3File(`${ticketIds[count]}.btx`)
         return nextRecord
       },
       pubKey
@@ -257,6 +257,7 @@ async function readTxBufferFromS3File(fileName) {
   for (let i = 0; i < buf.length; ++i) {
     buf[i] = view[i];
   }
+  console.log(buf, 'buf+++++++++++++')
   return buf;
 }
 
@@ -271,48 +272,48 @@ async function loadNextTransaction(ticketId) {
   return transactionResponse
 }
 
-async function selectWinners(initTransaction, finalizationTransaction, loadNextTicketSaleTransaction, pubKey) {
-  const initObject = validateInitTransaction(initTransaction, pubKey);
-  const initTxid = Buffer.from(bsv.Tx.fromBuffer(initTransaction).id(), "hex");
-  const finalizationObject = validateEndTransaction(
-    initObject,
-    initTxid,
-    finalizationTransaction,
-    pubKey
-  );
-  const ticketIds = []
-  let count = 0
-  let nextTicketTx = await loadNextTicketSaleTransaction();
-  console.log(nextTicketTx, 'nextTicketTx+++++')
-  while (nextTicketTx) {
-    const ticketId = validateTicketSaleTransaction(
-      initTxid,
-      nextTicketTx,
-      pubKey
-    );
-    console.log(ticketId, 'ticketId+++++++++')
-    for (let i = 0; i < ticketIds.length; i++) {
-      if (ticketIds[i] === ticketId) {
-        throw new Error(
-          `Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
-        );
-      }
-    }
+// async function selectWinners(initTransaction, finalizationTransaction, loadNextTicketSaleTransaction, pubKey) {
+//   const initObject = validateInitTransaction(initTransaction, pubKey);
+//   const initTxid = Buffer.from(bsv.Tx.fromBuffer(initTransaction).id(), "hex");
+//   const finalizationObject = validateEndTransaction(
+//     initObject,
+//     initTxid,
+//     finalizationTransaction,
+//     pubKey
+//   );
+//   const ticketIds = []
+//   let count = 0
+//   let nextTicketTx = await loadNextTicketSaleTransaction();
+//   console.log(nextTicketTx, 'nextTicketTx+++++')
+//   while (nextTicketTx) {
+//     const ticketId = validateTicketSaleTransaction(
+//       initTxid,
+//       nextTicketTx,
+//       pubKey
+//     );
+//     console.log(ticketId, 'ticketId+++++++++')
+//     for (let i = 0; i < ticketIds.length; i++) {
+//       if (ticketIds[i] === ticketId) {
+//         throw new Error(
+//           `Detected that Ticket Sale transaction with Ticket ID ${ticketId} is being processed more than once.`
+//         );
+//       }
+//     }
 
-    ticketIds.push(ticketId);
+//     ticketIds.push(ticketId);
 
-    if (ticketIds.length > initObject.noOfTickets) {
-      break;
-    }
-    nextTicketTx = await loadNextTicketSaleTransaction();
-    count++
-  }
-  if (ticketIds.length !== initObject.noOfTickets) {
-    throw Error("Ticket count does not match with expected count.");
-  }
-  const rng = new RNG(
-    initObject.initialSeed,
-    ...finalizationObject.additionalSeeds
-  );
+//     if (ticketIds.length > initObject.noOfTickets) {
+//       break;
+//     }
+//     nextTicketTx = await loadNextTicketSaleTransaction();
+//     count++
+//   }
+//   if (ticketIds.length !== initObject.noOfTickets) {
+//     throw Error("Ticket count does not match with expected count.");
+//   }
+//   const rng = new RNG(
+//     initObject.initialSeed,
+//     ...finalizationObject.additionalSeeds
+//   );
 
-}
+// }
