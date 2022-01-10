@@ -228,6 +228,7 @@ function parseTransaction(txBuffer, expectedMessageParts) {
 	// for (let i = 0; i < buf.length; ++i) {
 	// 	buf[i] = view[i];
 	// }
+	console.log(txBuffer,'txBuffertxBuffer')
 	const data = bsv.Tx.fromBuffer(txBuffer)
 	const bufferValues = data.txOuts[0].script.chunks.map((item) => item.buf);
 	const messageType = bufferValues[2];
